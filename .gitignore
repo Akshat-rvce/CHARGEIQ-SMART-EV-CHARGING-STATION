@@ -1,0 +1,8 @@
+node_modules/
+telemetry.db
+telemetry_fallback.json
+exports/
+.DS_Store
+.env
+.gemini/
+*.log

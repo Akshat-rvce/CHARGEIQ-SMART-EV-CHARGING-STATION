@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChargeIQ AI — Smart EV Charging Intelligence</title>
+  <meta name="description" content="Adaptive fuzzy logic charging system protecting EV batteries in real time. Built by EEE RVCE.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Unique layout styles for Landing Page */
+    .preloader {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg-darker);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .preloader-loader {
+      width: 250px;
+      height: 4px;
+      background: rgba(0, 180, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    
+    .preloader-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan);
+      transition: width 0.1s linear;
+    }
+    
+    .preloader-terminal {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      height: 80px;
+      text-align: left;
+      width: 300px;
+      line-height: 1.6;
+    }
+
+    /* Hero section */
+    .hero-container {
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      height: 100%;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+      z-index: 10;
+      padding: 0 40px;
+    }
+
+    .hero-text {
+      flex: 1;
+      max-width: 600px;
+    }
+
+    .hero-visual {
+      flex: 1;
+      height: 480px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    #battery-3d-canvas {
+      width: 100%;
+      height: 100%;
+      outline: none;
+    }
+
+    .particle-bg-canvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-micro-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-cyan);
+      letter-spacing: 4px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-transform: uppercase;
+    }
+
+    .hero-micro-label::before, .hero-micro-label::after {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: var(--accent-cyan);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: 76px;
+      font-weight: 900;
+      line-height: 1.0;
+      letter-spacing: -2px;
+      margin-bottom: 16px;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      line-height: 1.6;
+      max-width: 480px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.7;
+    }
+
+    .scroll-indicator span {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 40px;
+      background: rgba(0, 180, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scroll-line::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 15px;
+      background: var(--accent-cyan);
+      animation: scroll-fill 1.8s infinite cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes scroll-fill {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(300%); }
+    }
+
+    /* Metrics Bar */
+    .metrics-bar {
+      width: 100%;
+      background: rgba(8, 20, 40, 0.3);
+      border-top: 1px solid rgba(0, 180, 255, 0.08);
+      border-bottom: 1px solid rgba(0, 180, 255, 0.08);
+      padding: 40px 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .metrics-grid {
+      display: flex;
+      width: 100%;
+      max-width: 1100px;
+      justify-content: space-between;
+      padding: 0 40px;
+    }
+
+    .metric-item {
+      text-align: center;
+    }
+
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 15px rgba(0, 180, 255, 0.3);
+      margin-bottom: 6px;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Problem layout */
+    .problem-container {
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      gap: 60px;
+      padding: 0 40px;
+    }
+
+    .problem-left {
+      flex: 1;
+    }
+
+    .problem-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .problem-h2 {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+
+    .problem-para {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 36px;
+    }
+
+    .stat-card {
+      background: rgba(255, 48, 96, 0.03);
+      border: 1px solid rgba(255, 48, 96, 0.12);
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      border-color: rgba(255, 48, 96, 0.35);
+      background: rgba(255, 48, 96, 0.06);
+    }
+
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--accent-red);
+      text-shadow: 0 0 10px rgba(255, 48, 96, 0.3);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .comp-card {
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .comp-card.standard {
+      background: rgba(255, 48, 96, 0.04);
+      border: 1px solid rgba(255, 48, 96, 0.15);
+    }
+
+    .comp-card.smart {
+      background: rgba(0, 180, 255, 0.04);
+      border: 1px solid rgba(0, 180, 255, 0.2);
+      box-shadow: 0 0 30px rgba(0, 180, 255, 0.05);
+    }
+
+    .comp-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .comp-card.standard .comp-icon {
+      background: rgba(255, 48, 96, 0.15);
+      color: var(--accent-red);
+    }
+
+    .comp-card.smart .comp-icon {
+      background: rgba(0, 180, 255, 0.15);
+      color: var(--accent-cyan);
+    }
+
+    .comp-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .comp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .comp-list li {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comp-card.standard .comp-list li::before {
+      content: '✕';
+      color: var(--accent-red);
+    }
+
+    .comp-card.smart .comp-list li::before {
+      content: '✓';
+      color: var(--accent-cyan);
+    }
+
+    .comp-divider {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-primary);
+      padding: 6px 12px;
+      border: 1px solid var(--border-cyan);
+      border-radius: 4px;
+      z-index: 10;
+    }
+
+    /* How it works grid */
+    .flow-container {
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .section-header-center {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+    }
+
+    .section-h2 {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 800;
+      margin-top: 10px;
+    }
+
+    .horizontal-flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      position: relative;
+    }
+
+    .flow-step {
+      text-align: left;
+    }
+
+    .flow-step-icon {
+      font-size: 22px;
+      color: var(--accent-cyan);
+      margin-bottom: 16px;
+    }
+
+    .flow-step-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      color: var(--text-white);
+    }
+
+    .flow-step-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .flow-step-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: rgba(0, 180, 255, 0.6);
+      background: rgba(0, 180, 255, 0.05);
+      border: 1px solid rgba(0, 180, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .flow-step.highlighted {
+      background: rgba(155, 93, 229, 0.03);
+      border-color: rgba(155, 93, 229, 0.25);
+      box-shadow: 0 0 40px rgba(155, 93, 229, 0.08);
+    }
+
+    .flow-step.highlighted .flow-step-icon {
+      color: var(--accent-purple);
+      text-shadow: 0 0 10px rgba(155, 93, 229, 0.5);
+    }
+
+    .flow-step.highlighted .flow-step-tag {
+      color: var(--accent-purple);
+      background: rgba(155, 93, 229, 0.05);
+      border-color: rgba(155, 93, 229, 0.15);
+    }
+
+    .mini-rule-box {
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 6px;
+      padding: 8px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--accent-purple);
+      line-height: 1.4;
+      margin-top: 10px;
+      border: 1px solid rgba(155, 93, 229, 0.15);
+    }
+
+    /* Connecting Arrow Lines */
+    .flow-arrow-svg {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      width: 100%;
+      height: 20px;
+      pointer-events: none;
+      z-index: 10;
+      overflow: visible;
+    }
+
+    .flow-arrow-path {
+      fill: none;
+      stroke: rgba(0, 180, 255, 0.15);
+      stroke-width: 1.5;
+      stroke-dasharray: 4 4;
+    }
+
+    .flow-arrow-dot {
+      fill: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .outcome-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-top: 40px;
+      border-top: 1px solid rgba(0, 180, 255, 0.06);
+      padding-top: 30px;
+    }
+
+    .outcome-item {
+      text-align: center;
+    }
+
+    .outcome-num {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      margin-bottom: 4px;
+    }
+
+    .outcome-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Architecture diagram */
+    .arch-panel-container {
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 40px;
+      margin-top: 50px;
+    }
+
+    .arch-h3 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 30px;
+      color: var(--accent-cyan);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .arch-diagram {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      padding: 20px 0;
+    }
+
+    .arch-diagram::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 180, 255, 0.2) 20%, rgba(0, 180, 255, 0.2) 80%, transparent);
+      z-index: 1;
+    }
+
+    .arch-node {
+      position: relative;
+      z-index: 2;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-cyan);
+      border-radius: 8px;
+      padding: 10px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .arch-node:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px rgba(0, 180, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    .arch-node-name {
+      font-family: var(--font-display);
+      font-size: 11px;
+      color: var(--text-white);
+    }
+
+    .arch-node-tag {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .arch-packet {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      animation: data-packet-flow 4s linear infinite;
+    }
+
+    @keyframes data-packet-flow {
+      0% { left: 5%; }
+      100% { left: 95%; }
+    }
+
+    .arch-tooltip {
+      margin-top: 24px;
+      min-height: 48px;
+      background: rgba(8, 20, 40, 0.3);
+      border: 1px solid var(--border-cyan);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* Implemented features */
+    .features-container {
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 40px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .feature-card {
+      padding: 20px;
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      color: var(--accent-cyan);
+      margin-bottom: 12px;
+    }
+
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Tech Stack cards */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 40px;
+      margin-top: 30px;
+    }
+
+    .tech-card {
+      padding: 24px;
+    }
+
+    .tech-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--accent-cyan);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .tech-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .tech-spec {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Academic Branding */
+    .academic-panel {
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 40px;
+      margin-top: 60px;
+    }
+
+    .branding-box {
+      border: 1px solid rgba(0, 180, 255, 0.15);
+      background: linear-gradient(135deg, rgba(8, 20, 40, 0.4), rgba(4, 6, 10, 0.8));
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      position: relative;
+    }
+
+    .branding-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+      color: var(--accent-cyan);
+    }
+
+    .branding-sub {
+      font-family: var(--font-body);
+      font-size: 16px;
+      color: var(--text-white);
+      margin-bottom: 6px;
+    }
+
+    .branding-dept {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Roadmap layout */
+    .roadmap-section {
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 40px;
+      margin-top: 60px;
+    }
+
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .roadmap-card {
+      padding: 20px;
+      border: 1px dashed rgba(0, 180, 255, 0.15);
+    }
+
+    .roadmap-card:hover {
+      border-style: solid;
+      border-color: var(--accent-purple);
+    }
+
+    .roadmap-phase {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent-purple);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    /* Security section styling */
+    .security-section {
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 40px;
+      margin-top: 40px;
+    }
+
+    .security-box {
+      border: 1px solid rgba(0, 255, 136, 0.15);
+      background: rgba(0, 255, 136, 0.02);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 20px;
+    }
+
+    .security-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .security-icon {
+      font-size: 20px;
+      color: var(--accent-green);
+    }
+
+    .security-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Team grid styling */
+    .team-container {
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      gap: 60px;
+      padding: 0 40px;
+    }
+
+    .team-left {
+      flex: 1;
+    }
+
+    .team-right {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+    }
+
+    .team-card {
+      flex: 1;
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .avatar-circle {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: bold;
+      color: #000;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 0 15px rgba(0, 180, 255, 0.4);
+    }
+
+    .team-card:nth-child(2) .avatar-circle {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+      box-shadow: 0 0 15px rgba(155, 93, 229, 0.4);
+    }
+
+    .team-name {
+      font-family: var(--font-body);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .team-role {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .team-dept {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Footer styling */
+    footer {
+      background: var(--bg-darker);
+      border-top: 1px solid rgba(0, 180, 255, 0.08);
+      padding: 40px 80px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .footer-warning {
+      font-size: 10px;
+      color: rgba(74, 106, 138, 0.4);
+      margin-top: 20px;
+    }
+
+    @media (max-width: 992px) {
+      .hero-container, .problem-container, .team-container {
+        flex-direction: column;
+        height: auto;
+      }
+      .horizontal-flow, .features-grid, .tech-grid, .roadmap-grid, .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-title {
+        font-size: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Startup Preloader Loader -->
+  <div class="preloader" id="preloader">
+    <div class="logo">⚡ <span>ChargeIQ</span> AI</div>
+    <div class="preloader-loader">
+      <div class="preloader-bar" id="preloader-bar"></div>
+    </div>
+    <div class="preloader-terminal" id="preloader-terminal"></div>
+  </div>
+
+  <!-- Sticky Navbar -->
+  <nav class="sticky-nav">
+    <div class="nav-left">
+      <div class="logo">⚡ <span>ChargeIQ</span> AI</div>
+      <span class="logo-badge">RVCE EEE</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#home" class="active">Home</a></li>
+      <li><a href="dashboard.html">Live Dashboard</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#tech-stack">Tech Stack</a></li>
+    </ul>
+    <div class="nav-right">
+      <button onclick="window.location.href='dashboard.html'">Live Dashboard →</button>
+    </div>
+  </nav>
+
+  <!-- Scrolling Telemetry Ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-item">ESP32 DEVICE ONLINE</div>
+      <div class="ticker-item">LOCAL WI-FI CONNECTED [RSSI: -62dBm]</div>
+      <div class="ticker-item">MAMDANI FUZZY CONTROLLER ACTIVE</div>
+      <div class="ticker-item">SAFETY RELAY PROTECTION LAYER ENGAGED</div>
+      <div class="ticker-item">TELEMETRY BROADCAST PORT: 3000</div>
+      <div class="ticker-item">LATENCY COMPILATION: 12ms</div>
+      <div class="ticker-item">FIRMWARE BUILD: v1.0.4-rvce</div>
+      <!-- duplicate loop items -->
+      <div class="ticker-item">ESP32 DEVICE ONLINE</div>
+      <div class="ticker-item">LOCAL WI-FI CONNECTED [RSSI: -62dBm]</div>
+      <div class="ticker-item">MAMDANI FUZZY CONTROLLER ACTIVE</div>
+      <div class="ticker-item">SAFETY RELAY PROTECTION LAYER ENGAGED</div>
+    </div>
+  </div>
+
+  <!-- Particle canvas backgrounds behind hero -->
+  <canvas class="particle-bg-canvas" id="hero-particle-canvas"></canvas>
+
+  <!-- Section 1: Hero -->
+  <section class="section-full" id="home">
+    <div class="hero-container">
+      <div class="hero-text fade-up-element">
+        <div class="hero-micro-label">INTELLIGENT EV CHARGING SYSTEM</div>
+        <h1 class="hero-title">ChargeIQ<br><span class="text-gradient">AI Platform</span></h1>
+        <p class="hero-subtitle">Adaptive Mamdani fuzzy logic charging interface protecting your EV battery cells in real time against thermal and voltage stress.</p>
+        <div class="hero-buttons">
+          <button class="btn-primary" onclick="window.location.href='dashboard.html'">⚡ Live Dashboard</button>
+          <button class="btn-secondary" onclick="document.getElementById('problem').scrollIntoView({behavior:'smooth'});">See How It Works →</button>
+        </div>
+      </div>
+      <div class="hero-visual fade-up-element">
+        <canvas id="battery-3d-canvas"></canvas>
+      </div>
+    </div>
+    
+    <div class="scroll-indicator">
+      <span>SCROLL TO EXPLORE</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- Metrics Row Directly Below Hero -->
+  <div class="metrics-bar">
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <div class="metric-value">95%</div>
+        <div class="metric-label">Battery Protection Accuracy</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">&lt; 1s</div>
+        <div class="metric-label">Telemetry Latency</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">100%</div>
+        <div class="metric-label">Relay Cutoff Coverage</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">5</div>
+        <div class="metric-label">Charging States</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: The Problem -->
+  <section id="problem">
+    <div class="problem-container">
+      <div class="problem-left fade-up-element">
+        <div class="hero-micro-label" style="color:var(--accent-red)">THE PROBLEM</div>
+        <h2 class="problem-h2">Dumb chargers<br><span style="color:var(--accent-red); text-shadow:0 0 10px rgba(255,48,96,0.3)">are killing batteries.</span></h2>
+        <p class="problem-para">
+          Over 90% of electric vehicle charging units apply a fixed current profile regardless of internal battery cell temperature, actual state of charge (SoC), or thermal stress. The outcome: severe cell degradation, cycle lifetime drops of up to 20%, and thermal runaway hazards.
+        </p>
+        <div class="grid-2x2">
+          <div class="stat-card">
+            <div class="stat-num">90%</div>
+            <div class="stat-label">Chargers apply fixed profiles</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">40%</div>
+            <div class="stat-label">CAGR of EV Charger Market</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">15-20%</div>
+            <div class="stat-label">Cell life loss from overheating</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">₹15,000+</div>
+            <div class="stat-label">Retail cost of smart options</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-right fade-up-element">
+        <div class="comparison-grid">
+          <div class="comp-card standard">
+            <div class="comp-icon">✕</div>
+            <h3 class="comp-title">Standard Charger</h3>
+            <ul class="comp-list">
+              <li>Fixed CC-CV profile</li>
+              <li>No thermal monitors</li>
+              <li>No safety relay cutoff</li>
+              <li>No remote monitoring</li>
+              <li>Overcharge risk: HIGH</li>
+            </ul>
+          </div>
+          
+          <div class="comp-card smart">
+            <div class="comp-icon">✓</div>
+            <h3 class="comp-title" style="color:var(--accent-cyan)">ChargeIQ AI</h3>
+            <ul class="comp-list">
+              <li>Fuzzy current adjustment</li>
+              <li>Continuous NTC monitoring</li>
+              <li>Safety cutoff relay</li>
+              <li>Live WebSocket dashboard</li>
+              <li>Overcharge risk: ELIMINATED</li>
+            </ul>
+          </div>
+        </div>
+        <div class="comp-divider">VS</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: How It Works -->
+  <section id="architecture">
+    <div class="flow-container">
+      <div class="section-header-center fade-up-element">
+        <div class="hero-micro-label">HOW IT WORKS</div>
+        <h2 class="section-h2">Intelligence at every <span class="text-gradient">charging cycle.</span></h2>
+      </div>
+
+      <div class="horizontal-flow fade-up-element">
+        <svg class="flow-arrow-svg">
+          <path class="flow-arrow-path" d="M 120,30 L 1000,30" id="flowPath"></path>
+          <circle class="flow-arrow-dot" r="3" id="flowDot">
+            <animateMotion dur="2.5s" repeatCount="indefinite">
+              <mpath href="#flowPath"></mpath>
+            </animateMotion>
+          </circle>
+        </svg>
+
+        <div class="cyber-card flow-step">
+          <div class="hud-brackets"></div>
+          <div class="flow-step-icon">🔌</div>
+          <h3 class="flow-step-title">1. SENSORS READ</h3>
+          <p class="flow-step-desc">Current and cell temperatures are monitored via high-resolution NTC and ACS712 sensors every 100ms.</p>
+          <div class="flow-step-tag">GPIO 33, 34</div>
+        </div>
+
+        <div class="cyber-card flow-step">
+          <div class="hud-brackets"></div>
+          <div class="flow-step-icon">🔋</div>
+          <h3 class="flow-step-title">2. SOC ESTIMATION</h3>
+          <p class="flow-step-desc">Open Circuit Voltage mapping evaluates the exact State of Charge percentage.</p>
+          <div class="flow-step-tag">ADC CALIBRATION</div>
+        </div>
+
+        <div class="cyber-card flow-step highlighted">
+          <div class="hud-brackets"></div>
+          <div class="flow-step-icon">🧠</div>
+          <h3 class="flow-step-title">3. FUZZY FIS DECIDES</h3>
+          <p class="flow-step-desc">Mamdani rules process SoC and Temperature inputs to defuzzify the target current output.</p>
+          <div class="flow-step-tag" style="color:var(--accent-purple)">MAMDANI FIS</div>
+          <div class="mini-rule-box">
+            IF SoC = LOW & Temp = NORMAL ➔ I = FAST<br>
+            IF Temp = HOT ➔ I = STOP
+          </div>
+        </div>
+
+        <div class="cyber-card flow-step">
+          <div class="hud-brackets"></div>
+          <div class="flow-step-icon">⚡</div>
+          <h3 class="flow-step-title">4. RELAY SAFETY</h3>
+          <p class="flow-step-desc">BC547 driver controls power relays, instantly cutting charge paths on faults.</p>
+          <div class="flow-step-tag">GPIO 14 RELAY</div>
+        </div>
+
+        <div class="cyber-card flow-step">
+          <div class="hud-brackets"></div>
+          <div class="flow-step-icon">📡</div>
+          <h3 class="flow-step-title">5. IOT BROADCAST</h3>
+          <p class="flow-step-desc">ESP32 sends live updates to the local web backend every 1000ms via WebSockets.</p>
+          <div class="flow-step-tag">WEB SOCKETS</div>
+        </div>
+      </div>
+
+      <!-- Live Data Pipeline Nodes -->
+      <div class="arch-panel-container fade-up-element">
+        <h3 class="arch-h3">Live Data Architecture</h3>
+        <div class="arch-diagram">
+          <div class="arch-packet"></div>
+          <div class="arch-node" data-desc="Li-Ion battery pack being monitored by sensor grids.">
+            <div class="arch-node-name">EV Battery</div>
+            <div class="arch-node-tag">Physical</div>
+          </div>
+          <div class="arch-node" data-desc="ACS712, NTC thermistor, and voltage dividers sampling data every 100ms.">
+            <div class="arch-node-name">Sensors</div>
+            <div class="arch-node-tag">Fusion</div>
+          </div>
+          <div class="arch-node" data-desc="ESP32 processing core reading ADCs and driving relays.">
+            <div class="arch-node-name">ESP32</div>
+            <div class="arch-node-tag">Firmware</div>
+          </div>
+          <div class="arch-node" data-desc="Fuzzy inference controller matching charging profiles.">
+            <div class="arch-node-name">Fuzzy FIS</div>
+            <div class="arch-node-tag">AI Engine</div>
+          </div>
+          <div class="arch-node" data-desc="Hardware protection switch stopping thermal runaways.">
+            <div class="arch-node-name">Relay Cutoff</div>
+            <div class="arch-node-tag">Safety</div>
+          </div>
+          <div class="arch-node" data-desc="Express and Socket.IO local host web server.">
+            <div class="arch-node-name">Node.js Server</div>
+            <div class="arch-node-tag">Backend</div>
+          </div>
+          <div class="arch-node" data-desc="SQLite database writing charging histories.">
+            <div class="arch-node-name">telemetry.db</div>
+            <div class="arch-node-tag">Database</div>
+          </div>
+          <div class="arch-node" data-desc="Interactive frontend telemetry visualizer.">
+            <div class="arch-node-name">Dashboard</div>
+            <div class="arch-node-tag">Frontend</div>
+          </div>
+        </div>
+        <div class="arch-tooltip" id="arch-tooltip">Hover over an architecture node to inspect telemetry system details.</div>
+      </div>
+
+      <div class="outcome-stats fade-up-element">
+        <div class="outcome-item">
+          <div class="outcome-num">100ms</div>
+          <div class="outcome-label">Control Loop Cycle Latency</div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-num">5 Rules</div>
+          <div class="outcome-label">Mamdani Inference Base</div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-num">₹1,450</div>
+          <div class="outcome-label">Hardware Build Bill of Materials</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Implemented Features Showcase -->
+  <section>
+    <div class="features-container">
+      <div class="section-header-center fade-up-element">
+        <div class="hero-micro-label">CAPABILITIES</div>
+        <h2 class="section-h2">Platform Implemented <span class="text-gradient">Features.</span></h2>
+      </div>
+
+      <div class="features-grid fade-up-element">
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">📈</div>
+          <h3 class="feature-title">Adaptive Charging</h3>
+          <p class="feature-desc">Dynamically scales charging rates based on state of charge curves and thermal stress metrics.</p>
+        </div>
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">🧠</div>
+          <h3 class="feature-title">Fuzzy Logic Control</h3>
+          <p class="feature-desc">Replaces binary hard thresholds with smooth membership functions to limit cell wear.</p>
+        </div>
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">🔥</div>
+          <h3 class="feature-title">Overheat Protection</h3>
+          <p class="feature-desc">Continuous monitoring activates automatic relay cutoff if internal temperatures exceed 45°C.</p>
+        </div>
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">🔋</div>
+          <h3 class="feature-title">Full Charge Cutoff</h3>
+          <p class="feature-desc">Relay disconnects automatically at 95%+ state of charge to prevent cell degradation.</p>
+        </div>
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Live Telemetry</h3>
+          <p class="feature-desc">Socket.IO streams sensor telemetry packet parameters to the dashboard every 500ms.</p>
+        </div>
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Relay Control</h3>
+          <p class="feature-desc">Provides remote web override buttons for immediate connection/disconnection.</p>
+        </div>
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">🎛️</div>
+          <h3 class="feature-title">Digital Twin</h3>
+          <p class="feature-desc">Web schematic diagram reflecting the physical state of the charging module in real time.</p>
+        </div>
+        <div class="cyber-card feature-card">
+          <div class="hud-brackets"></div>
+          <div class="feature-icon">📝</div>
+          <h3 class="feature-title">Event Logging</h3>
+          <p class="feature-desc">Automatic database persistence of state logs, faults, and session analytics.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Tech Stack & Components -->
+  <section id="tech-stack">
+    <div class="features-container">
+      <div class="section-header-center fade-up-element">
+        <div class="hero-micro-label">SPECIFICATIONS</div>
+        <h2 class="section-h2">Hardware & Software <span class="text-gradient">Stack.</span></h2>
+      </div>
+
+      <div class="tech-grid fade-up-element">
+        <div class="cyber-card tech-card">
+          <div class="hud-brackets"></div>
+          <div class="tech-tag">Microcontroller</div>
+          <h3 class="tech-title">ESP32 DevKit V1</h3>
+          <p class="tech-spec">Dual-core 240MHz core, built-in WiFi module, 18-channel 12-bit ADC ports for sensor telemetry mapping.</p>
+        </div>
+        
+        <div class="cyber-card tech-card">
+          <div class="hud-brackets"></div>
+          <div class="tech-tag">Local Readout</div>
+          <h3 class="tech-title">16x2 LCD with I2C</h3>
+          <p class="tech-spec">On-device LCD module updating local battery parameters, current modes, and warning indices.</p>
+        </div>
+
+        <div class="cyber-card tech-card">
+          <div class="hud-brackets"></div>
+          <div class="tech-tag">Thermal probe</div>
+          <h3 class="tech-title">NTC Thermistor</h3>
+          <p class="tech-spec">Analog thermistor configured via Steinhart-Hart logarithmic calculations for exact cell temperature sensing.</p>
+        </div>
+
+        <div class="cyber-card tech-card">
+          <div class="hud-brackets"></div>
+          <div class="tech-tag">Current Sensor</div>
+          <h3 class="tech-title">ACS712 Sensor</h3>
+          <p class="tech-spec">Hall-effect current sensing module resolving current flow rates up to 5A with high ADC precision.</p>
+        </div>
+
+        <div class="cyber-card tech-card">
+          <div class="hud-brackets"></div>
+          <div class="tech-tag">Safety Circuit</div>
+          <h3 class="tech-title">Relay & Driver</h3>
+          <p class="tech-spec">5V active relay driven by a BC547 NPN transistor switch with 1N4007 flyback diode protection.</p>
+        </div>
+
+        <div class="cyber-card tech-card">
+          <div class="hud-brackets"></div>
+          <div class="tech-tag">Mamdani Engine</div>
+          <h3 class="tech-title">Fuzzy Logic Controller</h3>
+          <p class="tech-spec">Embedded logic using 5 Mamdani fuzzy rules defuzzified by centroid algorithms.</p>
+        </div>
+      </div>
+
+      <!-- Security box banner -->
+      <div class="security-section fade-up-element">
+        <div class="security-box">
+          <div class="security-item">
+            <span class="security-icon">🛡️</span>
+            <span class="security-text">Local Node Data Processing</span>
+          </div>
+          <div class="security-item">
+            <span class="security-icon">📶</span>
+            <span class="security-text">No Cloud Dependency Required</span>
+          </div>
+          <div class="security-item">
+            <span class="security-icon">⚡</span>
+            <span class="security-text">Real-Time safety controls</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Future Expansion Roadmap Section -->
+  <section>
+    <div class="roadmap-section">
+      <div class="section-header-center fade-up-element">
+        <div class="hero-micro-label">ROADMAP</div>
+        <h2 class="section-h2">Future Platform <span class="text-gradient">Expansion.</span></h2>
+      </div>
+
+      <div class="roadmap-grid fade-up-element">
+        <div class="cyber-card roadmap-card">
+          <div class="roadmap-phase">Phase 1</div>
+          <h3 class="tech-title" style="margin-bottom: 8px;">OTA Firmware</h3>
+          <p class="tech-spec">Over-the-air binary updates to adjust membership curves remotely.</p>
+        </div>
+        <div class="cyber-card roadmap-card">
+          <div class="roadmap-phase">Phase 2</div>
+          <h3 class="tech-title" style="margin-bottom: 8px;">Solar Integration</h3>
+          <p class="tech-spec">Auto-scaling charging rates based on photovoltaic source availability.</p>
+        </div>
+        <div class="cyber-card roadmap-card">
+          <div class="roadmap-phase">Phase 3</div>
+          <h3 class="tech-title" style="margin-bottom: 8px;">V2G Grid Support</h3>
+          <p class="tech-spec">Bi-directional power discharge logic mapping battery parameters to grid demand.</p>
+        </div>
+        <div class="cyber-card roadmap-card">
+          <div class="roadmap-phase">Phase 4</div>
+          <h3 class="tech-title" style="margin-bottom: 8px;">AI Battery SOH</h3>
+          <p class="tech-spec">Advanced electrochemical degradation prediction model using LSTM networks.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Academic Branding Container -->
+  <div class="academic-panel fade-up-element">
+    <div class="branding-box">
+      <div class="branding-title">RV COLLEGE OF ENGINEERING</div>
+      <div class="branding-sub">DEPARTMENT OF ELECTRICAL AND ELECTRONICS ENGINEERING</div>
+      <div class="branding-dept">Semester 4 · Academic Year 2025–26 Project</div>
+    </div>
+  </div>
+
+  <!-- Section 6: Team -->
+  <section>
+    <div class="team-container">
+      <div class="team-left fade-up-element">
+        <div class="hero-micro-label">DEVELOPERS</div>
+        <h2 class="problem-h2">Built in a hostel room.<br><span class="text-gradient">Presented to the world.</span></h2>
+        <p class="problem-para">
+          This adaptive Smart EV Charging Platform prototype was conceptualized, wired, and compiled entirely by fourth-semester students of EEE at RV College of Engineering, Bengaluru. Parts sourced directly from SP Road. A 10× cost savings over industrial equivalents with advanced safety.
+        </p>
+      </div>
+
+      <div class="team-right fade-up-element">
+        <div class="cyber-card team-card">
+          <div class="hud-brackets"></div>
+          <div class="avatar-circle">A</div>
+          <h3 class="team-name">Akshat</h3>
+          <div class="team-role">Firmware & Fuzzy Logic</div>
+          <div class="team-dept">RVCE EEE · Sem 4</div>
+        </div>
+
+        <div class="cyber-card team-card">
+          <div class="hud-brackets"></div>
+          <div class="avatar-circle">S</div>
+          <h3 class="team-name">Siddharth</h3>
+          <div class="team-role">Hardware & IoT Dashboard</div>
+          <div class="team-dept">RVCE EEE · Sem 4</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section dot navigation on the right -->
+  <div class="dots-nav">
+    <div class="dot active" onclick="document.getElementById('home').scrollIntoView({behavior:'smooth'});" data-target="home"></div>
+    <div class="dot" onclick="document.getElementById('problem').scrollIntoView({behavior:'smooth'});" data-target="problem"></div>
+    <div class="dot" onclick="document.getElementById('architecture').scrollIntoView({behavior:'smooth'});" data-target="architecture"></div>
+    <div class="dot" onclick="document.getElementById('tech-stack').scrollIntoView({behavior:'smooth'});" data-target="tech-stack"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-grid">
+      <div>⚡ ChargeIQ AI — Smart EV Charging Intelligence</div>
+      <div>Department of EEE · RVCE · Bengaluru</div>
+      <div>Built with ESP32 + Fuzzy Logic + ❤️</div>
+    </div>
+    <div class="footer-warning">
+      The ChargeIQ system is an academic prototype. Always adhere to battery safety, voltage limits, and thermal handling guidelines when constructing electronics.
+    </div>
+  </footer>
+
+  <!-- Load Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChargeIQ AI — Telemetry Control Room & Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Dashboard Specific Grid & UI Elements */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      max-width: 1600px;
+      width: 100%;
+      padding: 0 40px;
+      margin: 0 auto;
+      z-index: 10;
+    }
+
+    .sidebar-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .main-dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* KPI Cards row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-card {
+      padding: 16px;
+    }
+
+    .kpi-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-white);
+    }
+
+    .kpi-unit {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+      margin-left: 2px;
+    }
+
+    /* Connection Health Panel in navbar or dashboard top */
+    .health-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(8, 20, 40, 0.4);
+      border: 1px solid var(--border-cyan);
+      border-radius: 8px;
+      padding: 12px 24px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 1600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .health-group {
+      display: flex;
+      gap: 24px;
+    }
+
+    .health-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .health-item span {
+      color: var(--text-muted);
+    }
+
+    /* Mode selector toggle styling */
+    .mode-selector {
+      display: flex;
+      border: 1px solid var(--border-cyan);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-size: 11px;
+      padding: 12px 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 1px;
+    }
+
+    .mode-btn.active {
+      background: var(--accent-cyan);
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 0 15px rgba(0, 180, 255, 0.25);
+    }
+
+    /* Sliders styling */
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .slider-item input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(0, 180, 255, 0.1);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .slider-item input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    /* Control buttons grid */
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .control-btn {
+      background: rgba(8, 20, 40, 0.5);
+      border: 1px solid var(--border-cyan);
+      color: var(--text-white);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .control-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--accent-cyan);
+    }
+
+    .control-btn.danger {
+      border-color: rgba(255, 48, 96, 0.3);
+    }
+
+    .control-btn.danger:hover {
+      background: rgba(255, 48, 96, 0.1);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      box-shadow: 0 0 10px rgba(255, 48, 96, 0.2);
+    }
+
+    /* SVG Gauge Panels */
+    .gauges-section {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .gauge-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .gauge-svg {
+      width: 140px;
+      height: 140px;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(0, 180, 255, 0.05);
+      stroke-width: 8;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke: var(--accent-cyan);
+      stroke-width: 8;
+      stroke-dasharray: 440;
+      stroke-dashoffset: 440;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease;
+    }
+
+    .gauge-value-text {
+      position: absolute;
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .gauge-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-top: 10px;
+      text-transform: uppercase;
+    }
+
+    /* Mode panel display inside gauge layout */
+    .mode-display-card {
+      justify-content: space-between;
+      text-align: center;
+      min-height: 190px;
+    }
+
+    .active-mode-title {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--accent-green);
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+      margin: auto 0;
+    }
+
+    .active-mode-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-white);
+    }
+
+    /* Vector Digital Twin Wireframe */
+    .twin-card {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .twin-visual-box {
+      border: 1px solid rgba(0, 180, 255, 0.08);
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      height: 250px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .twin-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .twin-node-rect {
+      fill: #0b1c28;
+      stroke: var(--border-cyan);
+      stroke-width: 1;
+      transition: all 0.3s ease;
+    }
+
+    .twin-node-rect.active {
+      stroke: var(--accent-cyan);
+      fill: rgba(0, 180, 255, 0.08);
+    }
+
+    .twin-node-label {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      fill: var(--text-muted);
+      text-anchor: middle;
+      font-weight: bold;
+    }
+
+    .twin-node-rect.active + .twin-node-label {
+      fill: var(--text-white);
+    }
+
+    .twin-wire {
+      fill: none;
+      stroke: rgba(0, 180, 255, 0.1);
+      stroke-width: 1.5;
+    }
+
+    .twin-wire.active {
+      stroke: var(--accent-green);
+      stroke-dasharray: 6 4;
+      animation: electron-flow 2s linear infinite;
+    }
+
+    @keyframes electron-flow {
+      0% { stroke-dashoffset: 20; }
+      100% { stroke-dashoffset: 0; }
+    }
+
+    .twin-lcd-screen {
+      fill: rgba(0, 255, 136, 0.03);
+      stroke: rgba(0, 255, 136, 0.3);
+      stroke-width: 1;
+    }
+
+    .twin-lcd-text {
+      font-family: var(--font-mono);
+      font-size: 6px;
+      fill: var(--accent-green);
+    }
+
+    /* Fuzzy Logic Activation inspector bars */
+    .fuzzy-visual-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .fuzzy-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .fuzzy-row-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .fuzzy-bars-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .fuzzy-bar-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .fuzzy-bar-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .fuzzy-bar-rail {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 180, 255, 0.05);
+    }
+
+    .fuzzy-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .soc-fill { background-color: var(--accent-cyan); }
+    .temp-fill { background-color: var(--accent-purple); }
+
+    /* Chart row */
+    .chart-card {
+      height: 240px;
+      position: relative;
+    }
+
+    /* History & sessions table */
+    .sessions-card {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-body);
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .dashboard-table th {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(0, 180, 255, 0.1);
+    }
+
+    .dashboard-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(0, 180, 255, 0.04);
+      color: var(--text-white);
+    }
+
+    .dashboard-table tbody tr:hover {
+      background: rgba(0, 180, 255, 0.02);
+    }
+
+    /* Event Timeline logger */
+    .log-terminal {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-cyan);
+      border-radius: 8px;
+      padding: 12px;
+      height: 120px;
+      overflow-y: auto;
+      color: var(--text-white);
+      line-height: 1.6;
+    }
+
+    .log-line.warning { color: var(--accent-amber); }
+    .log-line.critical { color: var(--accent-red); font-weight: bold; }
+    .log-line.info { color: var(--accent-cyan); }
+
+    /* Floating alerts styling */
+    .notification-center {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 10002;
+      width: 320px;
+      pointer-events: none;
+    }
+
+    .toast-alert {
+      background: var(--bg-darker);
+      border: 1px solid var(--border-cyan);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 6px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: all;
+    }
+
+    .toast-alert.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast-header {
+      font-family: var(--font-display);
+      font-size: 11px;
+      letter-spacing: 1px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .toast-body {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-white);
+    }
+
+    /* Session Replay Console Controls */
+    .playback-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(0, 180, 255, 0.08);
+      margin-top: 15px;
+      padding-top: 15px;
+    }
+
+    .playback-btn-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .playback-btn {
+      background: rgba(8, 20, 40, 0.4);
+      border: 1px solid var(--border-cyan);
+      color: var(--accent-cyan);
+      border-radius: 4px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .playback-btn:hover {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    .playback-timeline {
+      flex: 1;
+      margin: 0 16px;
+      position: relative;
+    }
+
+    .playback-slider {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 3px;
+      background: rgba(0, 180, 255, 0.1);
+      outline: none;
+    }
+
+    .playback-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+    }
+
+    .playback-time-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+      .kpi-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .gauges-section {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .twin-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body style="padding-top: 110px;">
+
+  <!-- Startup Diagnostics Overlay -->
+  <div id="diagnostics-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-darker); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: var(--font-mono); transition: all 0.8s ease;">
+    <div style="border: 1px solid var(--accent-cyan); padding: 40px; border-radius: 12px; background: rgba(8, 20, 40, 0.9); box-shadow: 0 0 50px rgba(0, 180, 255, 0.25); text-align: left; width: 480px; max-width: 90%;">
+      <div style="font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--accent-cyan); text-shadow: 0 0 15px rgba(0, 180, 255, 0.5); margin-bottom: 24px; text-transform: uppercase; text-align: center; letter-spacing: 2px;">⚡ ChargeIQ SCADA Boot</div>
+      <div id="diag-list" style="display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: var(--text-white);">
+        <div class="diag-item" id="diag-backend"><span style="color:var(--accent-amber)">○</span> Backend Server Link: <span style="color:var(--accent-amber)">PENDING...</span></div>
+        <div class="diag-item" id="diag-database"><span style="color:var(--accent-amber)">○</span> SQLite Database: <span style="color:var(--accent-amber)">PENDING...</span></div>
+        <div class="diag-item" id="diag-socket"><span style="color:var(--accent-amber)">○</span> Socket.IO Registry: <span style="color:var(--accent-amber)">PENDING...</span></div>
+        <div class="diag-item" id="diag-serial"><span style="color:var(--accent-amber)">○</span> Serial Interface Manager: <span style="color:var(--accent-amber)">PENDING...</span></div>
+        <div class="diag-item" id="diag-esp32"><span style="color:var(--accent-amber)">○</span> ESP32 Connection: <span style="color:var(--accent-amber)">PENDING...</span></div>
+        <div class="diag-item" id="diag-stream"><span style="color:var(--accent-amber)">○</span> Telemetry Stream: <span style="color:var(--accent-amber)">PENDING...</span></div>
+      </div>
+      <div style="margin-top: 30px; border-top: 1px solid rgba(0, 180, 255, 0.1); padding-top: 16px; text-align: center; font-size: 10px; color: var(--text-muted);">RVCE EEE DEPARTMENTS — PROTOCOL V1.0</div>
+    </div>
+  </div>
+
+  <!-- Disconnect Warning Banner -->
+  <div id="esp32-disconnect-banner" style="display: none; background: rgba(255, 48, 96, 0.95); color: white; text-align: center; padding: 12px; font-family: var(--font-display); font-size: 13px; font-weight: bold; z-index: 10005; position: fixed; top: 0; left: 0; width: 100%; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); letter-spacing: 1px;">
+    ⚠️ ESP32 SERIAL CONNECTION LOST. SHOWING LAST KNOWN DATA. SCANNING FOR PORT...
+  </div>
+
+  <!-- Timeout Warning Banner -->
+  <div id="esp32-timeout-banner" style="display: none; background: rgba(255, 184, 0, 0.95); color: black; text-align: center; padding: 12px; font-family: var(--font-display); font-size: 13px; font-weight: bold; z-index: 10006; position: fixed; top: 0; left: 0; width: 100%; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); letter-spacing: 1px;">
+    ⚠️ ESP32 TIMEOUT! NO TELEMETRY RECEIVED. Last packet received <span id="timeout-seconds-lbl">5.0</span> seconds ago.
+  </div>
+
+  <!-- Sticky Navbar -->
+  <nav class="sticky-nav">
+    <div class="nav-left">
+      <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer">⚡ <span>ChargeIQ</span> AI</div>
+      <span class="logo-badge">RVCE EEE</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="dashboard.html" class="active">Live Dashboard</a></li>
+      <li><a href="index.html#architecture">Architecture</a></li>
+      <li><a href="index.html#tech-stack">Tech Stack</a></li>
+    </ul>
+    <div class="nav-right" style="display:flex; align-items:center; gap:20px;">
+      <!-- Telemetry Recording Indicator -->
+      <div id="recording-indicator" style="font-family: var(--font-mono); font-size: 11px; font-weight: bold; color: var(--accent-green); display: flex; align-items: center; gap: 6px;">
+        <span style="font-size:12px; animation: green-pulsing 1.5s infinite;" id="recording-dot">●</span> <span id="recording-txt">RECORDING</span>
+      </div>
+      <div class="status-pill">
+        <span class="status-dot green" id="system-health-dot"></span>
+        <span id="system-health-txt">DEMO MODE ACTIVE</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Horizontal Ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-item">ESP32 TELEMETRY BROADCAST ACTIVE</div>
+      <div class="ticker-item">MAMDANI FUZZY ENGINE RUNNING</div>
+      <div class="ticker-item" id="ticker-soc">BATTERY SOC: -- %</div>
+      <div class="ticker-item" id="ticker-temp">CELL TEMP: -- °C</div>
+      <div class="ticker-item" id="ticker-mode">MODE: STANDBY</div>
+      <div class="ticker-item">SAFETY GATEWAY ACTIVE</div>
+    </div>
+  </div>
+
+  <!-- Connection Status Indicators Panel -->
+  <div class="health-bar fade-up-element visible">
+    <div class="health-group">
+      <div class="health-item">
+        <span>ESP32 Serial:</span>
+        <div class="status-dot red" id="health-esp32"></div>
+      </div>
+      <div class="health-item">
+        <span>Backend Server:</span>
+        <div class="status-dot red" id="health-server"></div>
+      </div>
+      <div class="health-item">
+        <span>Socket.IO Link:</span>
+        <div class="status-dot red" id="health-socket"></div>
+      </div>
+      <div class="health-item">
+        <span>telemetry.db:</span>
+        <div class="status-dot red" id="health-database"></div>
+      </div>
+      <div class="health-item">
+        <span>WiFi Module:</span>
+        <div class="status-dot green" id="health-wifi"></div>
+      </div>
+    </div>
+    <div class="health-item">
+      <span>COM Port:</span>
+      <span style="color:var(--accent-cyan); font-weight:bold" id="serial-port-lbl">NONE</span>
+      <span style="margin-left:16px;">Latency:</span>
+      <span style="color:var(--accent-cyan)" id="ping-latency">--ms</span>
+      <span style="margin-left:16px;">Last Packet:</span>
+      <span style="color:var(--accent-cyan)" id="last-msg-time">--:--:--</span>
+    </div>
+  </div>
+
+  <!-- Main Grid Layout -->
+  <div class="dashboard-layout fade-up-element visible">
+    
+    <!-- Left Sidebar: Controls & Modes -->
+    <div class="sidebar-controls">
+      
+      <!-- Mode Selection & Connection Manager Card -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">Operating Mode</h3>
+        
+        <div class="mode-selector">
+          <button class="mode-btn active" id="mode-live" onclick="setMode('LIVE')">LIVE MODE</button>
+          <button class="mode-btn" id="mode-sim" onclick="setMode('SIMULATION')">SIM MODE</button>
+        </div>
+
+        <!-- Simulation Overrides -->
+        <div id="sim-controls-panel" style="display:none; margin-top:12px;">
+          <div class="slider-group">
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Voltage Override</span>
+                <span id="val-volts">3.80 V</span>
+              </div>
+              <input type="range" id="range-volts" min="3.0" max="4.5" step="0.05" value="3.80" oninput="simUpdate()">
+            </div>
+            
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Current Override</span>
+                <span id="val-amps">0.80 A</span>
+              </div>
+              <input type="range" id="range-amps" min="0.0" max="2.0" step="0.05" value="0.80" oninput="simUpdate()">
+            </div>
+            
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Temperature Override</span>
+                <span id="val-temp">30 °C</span>
+              </div>
+              <input type="range" id="range-temp" min="10" max="60" step="1" value="30" oninput="simUpdate()">
+            </div>
+            
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>SoC Override</span>
+                <span id="val-soc">65 %</span>
+              </div>
+              <input type="range" id="range-soc" min="0" max="100" step="1" value="65" oninput="simUpdate()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Serial Link Connection Manager -->
+        <div id="live-connection-manager-panel" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+          <div class="slider-item">
+            <span class="slider-label-row" style="font-size: 10px; color: var(--text-muted);">COM PORT</span>
+            <select id="com-port-selector" style="width:100%; background:#0b1c28; border:1px solid var(--border-cyan); color:var(--text-white); font-family:var(--font-mono); font-size:11px; padding:6px; border-radius:4px; outline:none; cursor:pointer;">
+              <option value="AUTO">AUTO DETECT</option>
+            </select>
+          </div>
+          
+          <div class="slider-item">
+            <span class="slider-label-row" style="font-size: 10px; color: var(--text-muted);">BAUD RATE</span>
+            <select id="baud-rate-selector" style="width:100%; background:#0b1c28; border:1px solid var(--border-cyan); color:var(--text-white); font-family:var(--font-mono); font-size:11px; padding:6px; border-radius:4px; outline:none; cursor:pointer;">
+              <option value="9600">9600 bps</option>
+              <option value="57600">57600 bps</option>
+              <option value="115200" selected>115200 bps</option>
+              <option value="230400">230400 bps</option>
+            </select>
+          </div>
+          
+          <div style="display: flex; gap: 8px;">
+            <button class="control-btn" id="btn-serial-connect" style="flex: 1; padding: 6px; font-size: 11px;" onclick="connectSerialPort()">Connect</button>
+            <button class="control-btn danger" id="btn-serial-disconnect" style="flex: 1; padding: 6px; font-size: 11px;" onclick="disconnectSerialPort()">Disconnect</button>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 11px; margin-top: 4px;">
+            <span style="color: var(--text-muted);">Auto-Reconnect:</span>
+            <input type="checkbox" id="toggle-auto-reconnect" checked style="cursor: pointer;">
+          </div>
+          
+          <div style="border-top: 1px solid rgba(0, 180, 255, 0.08); padding-top: 10px; font-family: var(--font-mono); font-size: 11px; line-height: 1.6; color: var(--text-white);">
+            <div>ESP32: <span id="serial-link-status" style="font-weight:bold; color:var(--accent-red)">DISCONNECTED</span></div>
+            <div>Port: <span id="serial-port-name" style="color:var(--accent-cyan)">AUTO</span></div>
+            <div>Baud: <span id="serial-port-baud" style="color:var(--accent-cyan)">115200</span></div>
+            <div>Connected for: <span id="serial-duration" style="color:var(--accent-cyan)">00:00:00</span></div>
+            <div>Last Packet: <span id="serial-last-time" style="color:var(--accent-cyan)">--</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remote Control Room -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">Remote Controls</h3>
+        <div class="control-grid">
+          <button class="control-btn" onclick="triggerControl('START')">⚡ Start</button>
+          <button class="control-btn" onclick="triggerControl('STOP')">🛑 Stop</button>
+          <button class="control-btn" onclick="triggerControl('RESET')">🔄 Reset</button>
+          <button class="control-btn" id="btn-relay" onclick="toggleRelayManual()">🔌 Relay ON</button>
+        </div>
+        <button class="control-btn danger" style="width:100%; margin-top:10px;" onclick="triggerEmergencyCutoff()">⚠️ EMERGENCY CUTOFF</button>
+      </div>
+
+      <!-- SCADA Diagnostics & Packet Stats -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">SCADA Stats & Core Diagnostics</h3>
+        <div style="font-family:var(--font-mono); font-size:11px; line-height:1.6; color:var(--text-white)">
+          <div>Packets Received: <span style="color:var(--accent-cyan)" id="stats-received">0</span></div>
+          <div>Packets Lost: <span style="color:var(--accent-red)" id="stats-lost">0</span></div>
+          <div>Packet Rate: <span style="color:var(--accent-green)" id="stats-pps">0 pkt/sec</span></div>
+          <div>Avg Interval: <span style="color:var(--accent-green)" id="stats-interval">-- ms</span></div>
+          <div>Link Reliability: <span style="color:var(--accent-cyan)" id="stats-reliability">100.00%</span></div>
+          <div style="border-top: 1px solid rgba(0, 180, 255, 0.08); margin-top: 8px; padding-top: 8px;">
+            <div>System Uptime: <span style="color:var(--accent-cyan)" id="esp32-uptime">0h 14m 22s</span></div>
+            <div>CPU Freq: <span style="color:var(--accent-cyan)">240 MHz</span></div>
+            <div>Heap Free: <span style="color:var(--accent-cyan)">184 KB</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Battery SOH & Health Estimator -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">Battery SOH & Health Estimator</h3>
+        <div style="font-family:var(--font-mono); font-size:11px; line-height:1.6; color:var(--text-white)">
+          <div>State of Health (SOH): <span style="color:var(--accent-green); font-weight:bold;" id="soh-val">95.0%</span></div>
+          <div>Total Cycle Count: <span style="color:var(--accent-cyan)" id="soh-cycles">12</span></div>
+          <div>Thermal Stress Index: <span style="color:var(--accent-cyan)" id="soh-thermal">0.02 (LOW)</span></div>
+          <div>Charging Quality Score: <span style="color:var(--accent-green)" id="soh-quality">98.2%</span></div>
+          <div>Est. Degradation: <span style="color:var(--accent-amber)" id="soh-degradation">5.0%</span></div>
+        </div>
+      </div>
+
+      <!-- Data Export Panel -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">Data Export Center</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="control-grid">
+            <button class="control-btn" onclick="exportData('CSV')">📄 CSV</button>
+            <button class="control-btn" onclick="exportData('PDF')">📁 PDF</button>
+          </div>
+          <button class="control-btn" id="btn-db-backup" onclick="downloadDatabaseBackup()" style="width:100%;">💾 Backup Database (telemetry.db)</button>
+        </div>
+      </div>
+
+      <!-- Historical Database Analytics Panel -->
+      <div class="cyber-card" style="margin-top: 10px;">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">Historical DB Analytics</h3>
+        <div style="margin-bottom: 12px;">
+          <select id="analytics-range-selector" onchange="updateAnalytics()" style="width:100%; background:#0b1c28; border:1px solid var(--border-cyan); color:var(--text-white); font-family:var(--font-mono); font-size:11px; padding:6px; border-radius:4px; outline:none; cursor:pointer;">
+            <option value="hour">Last 1 Hour</option>
+            <option value="day">Last 24 Hours</option>
+            <option value="week">Last 7 Days</option>
+            <option value="all" selected>All Time</option>
+          </select>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px; line-height:1.6; color:var(--text-white)">
+          <div>Avg SoC: <span style="color:var(--accent-cyan)" id="analytics-avg-soc">--</span>%</div>
+          <div>Avg Temp: <span style="color:var(--accent-cyan)" id="analytics-avg-temp">--</span>°C</div>
+          <div>Peak Temp: <span style="color:var(--accent-red)" id="analytics-peak-temp">--</span>°C</div>
+          <div>Total Energy: <span style="color:var(--accent-green)" id="analytics-total-energy">--</span> Wh</div>
+          <div>Sessions Count: <span style="color:var(--accent-cyan)" id="analytics-session-count">--</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Side: Dashboard Widgets -->
+    <div class="main-dashboard">
+      
+      <!-- Operating Mode Badge Panel -->
+      <div id="mode-status-badge-container" style="display: flex; gap: 10px; margin-bottom: 5px;">
+        <div id="mode-badge-live" style="display: none; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 11px; font-weight: 800; background: rgba(0, 255, 136, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 6px 12px; border-radius: 4px; text-shadow: 0 0 10px rgba(0,255,136,0.3); letter-spacing: 1px;">
+          <span class="status-dot green" style="width: 6px; height: 6px; animation: green-pulsing 1.2s infinite;"></span> LIVE HARDWARE MODE
+        </div>
+        <div id="mode-badge-demo" style="display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 11px; font-weight: 800; background: rgba(0, 180, 255, 0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 6px 12px; border-radius: 4px; text-shadow: 0 0 10px rgba(0,180,255,0.3); letter-spacing: 1px;">
+          <span class="status-dot blue" style="width: 6px; height: 6px; background: var(--accent-cyan); box-shadow: 0 0 6px var(--accent-cyan);"></span> DEMO SIMULATION MODE
+        </div>
+      </div>
+
+      <!-- Top Row KPIs -->
+      <div class="kpi-row">
+        <div class="cyber-card kpi-card">
+          <div class="kpi-title">Total Energy</div>
+          <div class="kpi-value"><span id="kpi-energy">15.82</span><span class="kpi-unit">Wh</span></div>
+        </div>
+        <div class="cyber-card kpi-card">
+          <div class="kpi-title">Charging Efficiency</div>
+          <div class="kpi-value"><span id="kpi-efficiency">98.2</span><span class="kpi-unit">%</span></div>
+        </div>
+        <div class="cyber-card kpi-card">
+          <div class="kpi-title">Battery Health</div>
+          <div class="kpi-value"><span id="kpi-health">95</span><span class="kpi-unit">%</span></div>
+        </div>
+        <div class="cyber-card kpi-card">
+          <div class="kpi-title">Session Time</div>
+          <div class="kpi-value" id="kpi-duration">00:14:22</div>
+        </div>
+        <div class="cyber-card kpi-card">
+          <div class="kpi-title">Carbon Offset</div>
+          <div class="kpi-value"><span id="kpi-carbon">12.4</span><span class="kpi-unit">g</span></div>
+        </div>
+        <div class="cyber-card kpi-card">
+          <div class="kpi-title">Session Cost</div>
+          <div class="kpi-value"><span id="kpi-cost">₹ 4.80</span></div>
+        </div>
+      </div>
+
+      <!-- Status & Health Row -->
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1fr; gap: 16px;">
+        <!-- Battery Status -->
+        <div class="cyber-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 140px;">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom: 10px;">Battery State</h3>
+          <div id="battery-status-badge" style="font-family: var(--font-display); font-size: 14px; font-weight: 800; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-cyan); text-transform: uppercase; color: var(--text-muted); background: rgba(255,255,255,0.02)">
+            DISCONNECTED
+          </div>
+          <div id="battery-status-desc" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Waiting for ESP32 link...</div>
+        </div>
+
+        <!-- Sensor Grid -->
+        <div class="cyber-card" style="min-height: 140px;">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom: 12px;">Hardware Sensor Registry</h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-family: var(--font-mono); font-size: 10px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div class="status-dot red" id="status-volt-sensor" style="width: 5px; height: 5px;"></div>
+              <span>Volt Sensor</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div class="status-dot red" id="status-curr-sensor" style="width: 5px; height: 5px;"></div>
+              <span>ACS712 Sensor</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div class="status-dot red" id="status-temp-sensor" style="width: 5px; height: 5px;"></div>
+              <span>NTC Sensor</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div class="status-dot red" id="status-relay" style="width: 5px; height: 5px;"></div>
+              <span>Safety Relay</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div class="status-dot red" id="status-lcd" style="width: 5px; height: 5px;"></div>
+              <span>16x2 LCD</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div class="status-dot red" id="status-buzzer" style="width: 5px; height: 5px;"></div>
+              <span>Piezo Buzzer</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; grid-column: span 2;">
+              <div class="status-dot red" id="status-leds" style="width: 5px; height: 5px;"></div>
+              <span>RGB Status LEDs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Session Summary Card -->
+        <div class="cyber-card" style="min-height: 140px; display: flex; flex-direction: column; justify-content: center;">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom: 8px;">Live Session Summary</h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--text-white);">
+            <div>Duration: <span style="color:var(--accent-cyan)" id="summary-duration">00:00:00</span></div>
+            <div>Start SOC: <span style="color:var(--accent-cyan)" id="summary-start-soc">--</span></div>
+            <div>Current SOC: <span style="color:var(--accent-cyan)" id="summary-current-soc">--</span></div>
+            <div>Energy: <span style="color:var(--accent-green)" id="summary-energy">0.00 Wh</span></div>
+            <div>Avg Temp: <span style="color:var(--accent-cyan)" id="summary-avg-temp">--</span></div>
+            <div>Max Temp: <span style="color:var(--accent-red)" id="summary-max-temp">--</span></div>
+            <div>Mode: <span style="color:var(--accent-amber)" id="summary-mode">STANDBY</span></div>
+            <div>ETA: <span style="color:var(--accent-cyan)" id="summary-eta">--</span></div>
+          </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="cyber-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 140px;">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom: 8px;">System Health Score</h3>
+          <div id="health-score-val" style="font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--text-muted); text-shadow: 0 0 10px rgba(74, 106, 138, 0.1);">
+            0%
+          </div>
+          <div style="width: 80%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; margin-top: 6px;">
+            <div id="health-score-bar" style="width: 0%; height: 100%; background: var(--text-muted); transition: width 0.5s ease;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gauges Grid -->
+      <div class="gauges-section">
+        
+        <!-- SoC Gauge -->
+        <div class="cyber-card gauge-card">
+          <div class="hud-brackets"></div>
+          <svg class="gauge-svg">
+            <circle class="gauge-bg" cx="70" cy="70" r="55"></circle>
+            <circle class="gauge-fill" id="gauge-fill-soc" cx="70" cy="70" r="55"></circle>
+          </svg>
+          <div class="gauge-value-text" id="gauge-txt-soc">72%</div>
+          <div class="gauge-label">State of Charge</div>
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--accent-cyan); margin-top:8px;" id="charge-eta-lbl">ETA: -- mins</div>
+        </div>
+
+        <!-- Temp Gauge -->
+        <div class="cyber-card gauge-card">
+          <div class="hud-brackets"></div>
+          <svg class="gauge-svg">
+            <circle class="gauge-bg" cx="70" cy="70" r="55"></circle>
+            <circle class="gauge-fill" id="gauge-fill-temp" cx="70" cy="70" r="55" style="stroke: var(--accent-amber)"></circle>
+          </svg>
+          <div class="gauge-value-text" id="gauge-txt-temp">34°C</div>
+          <div class="gauge-label">Cell Temperature</div>
+        </div>
+
+        <!-- Live Power & Energy Analytics -->
+        <div class="cyber-card gauge-card" style="min-height:190px;">
+          <div class="hud-brackets"></div>
+          <div class="kpi-title" style="margin-bottom:10px;">Power & Energy Analytics</div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 8px;">
+            <div style="font-family: var(--font-display); font-size: 26px; font-weight: 900; color: var(--accent-cyan); text-shadow: 0 0 15px rgba(0, 180, 255, 0.3);" id="twin-watts-txt">0.00 W</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); line-height: 1.6; text-align: left; margin-top: 8px; width: 100%; padding-left: 10px;">
+              <div>Voltage: <span style="color:var(--text-white); font-weight:bold;" id="analytics-volts">0.00 V</span></div>
+              <div>Current: <span style="color:var(--text-white); font-weight:bold;" id="analytics-amps">0.00 A</span></div>
+              <div>Energy: <span style="color:var(--accent-green); font-weight:bold;" id="analytics-wh">0.00 Wh</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Mode Card -->
+        <div class="cyber-card mode-display-card">
+          <div class="hud-brackets"></div>
+          <div class="kpi-title">Active AI Decision</div>
+          <div class="active-mode-title" id="mode-display-txt">MEDIUM ⚡</div>
+          <div class="active-mode-sub" id="mode-display-sub">Relay Path: ENGAGED</div>
+        </div>
+
+      </div>
+
+      <!-- Digital Twin & Fuzzy Inspector Row -->
+      <div class="twin-card">
+        
+        <!-- Twin Schematic -->
+        <div class="cyber-card" style="height:100%">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom:12px;">Charging Module Digital Twin</h3>
+          
+          <div class="twin-visual-box">
+            <svg class="twin-svg" viewBox="0 0 300 150">
+              
+              <!-- Connection wire paths -->
+              <path class="twin-wire active" id="twin-wire-1" d="M 30,75 L 75,75 M 125,75 L 175,75 M 225,75 L 270,75"></path>
+              <path class="twin-wire" d="M 100,50 L 100,20 L 200,20 L 200,50"></path>
+              
+              <!-- GPIO bus wires -->
+              <path class="twin-wire" d="M 35,115 L 95,115 L 95,40" style="stroke:rgba(155, 93, 229, 0.25)"></path>
+              <path class="twin-wire" d="M 110,105 L 110,40" style="stroke:rgba(0, 180, 255, 0.25)"></path>
+              <path class="twin-wire" d="M 155,105 L 155,40" style="stroke:rgba(255, 184, 0, 0.25)"></path>
+              <path class="twin-wire" d="M 215,110 L 205,110 L 205,40" style="stroke:rgba(0, 255, 136, 0.25)"></path>
+
+              <!-- Components -->
+              <!-- Voltage Sensor -->
+              <g>
+                <rect class="twin-node-rect active" x="15" y="55" width="40" height="40" rx="4"></rect>
+                <text class="twin-node-label" x="35" y="77" id="twin-volts-lbl">4.12V</text>
+                <text class="twin-node-label" x="35" y="90" style="font-size:6px">Voltage</text>
+              </g>
+
+              <!-- Current Sensor -->
+              <g>
+                <rect class="twin-node-rect active" x="75" y="55" width="40" height="40" rx="4"></rect>
+                <text class="twin-node-label" x="95" y="77" id="twin-amps-lbl">0.82A</text>
+                <text class="twin-node-label" x="95" y="90" style="font-size:6px">ACS712</text>
+              </g>
+
+              <!-- Safety Relay -->
+              <g>
+                <rect class="twin-node-rect active" x="135" y="55" width="40" height="40" rx="4" id="twin-relay-rect"></rect>
+                <text class="twin-node-label" x="155" y="77" id="twin-relay-lbl">CLOSED</text>
+                <text class="twin-node-label" x="155" y="90" style="font-size:6px">Relay</text>
+              </g>
+
+              <!-- Battery Cell -->
+              <g>
+                <rect class="twin-node-rect active" x="195" y="55" width="40" height="40" rx="4"></rect>
+                <text class="twin-node-label" x="215" y="77" id="twin-soc-lbl">72%</text>
+                <text class="twin-node-label" x="215" y="90" style="font-size:6px" id="twin-cell-lbl">Li-Ion</text>
+              </g>
+
+              <!-- NTC Thermistor -->
+              <g>
+                <rect class="twin-node-rect active" x="250" y="55" width="35" height="40" rx="4" id="twin-temp-rect"></rect>
+                <text class="twin-node-label" x="267" y="77" id="twin-temp-lbl">34°C</text>
+                <text class="twin-node-label" x="267" y="90" style="font-size:6px">NTC</text>
+              </g>
+
+              <!-- ESP32 Controller Node -->
+              <g>
+                <rect class="twin-node-rect active" x="90" y="10" width="120" height="30" rx="4"></rect>
+                <text class="twin-node-label" x="150" y="24" style="fill:var(--accent-cyan)">ESP32 DevKit Core</text>
+                <text class="twin-node-label" x="150" y="34" style="font-size:6px">Processing Loop</text>
+              </g>
+
+              <!-- Push Button -->
+              <g>
+                <rect class="twin-node-rect active" x="25" y="105" width="20" height="20" rx="2" id="twin-btn-rect" style="fill:#0f172a; stroke:#64748b;"></rect>
+                <circle cx="35" cy="115" r="5" id="twin-btn-cap" style="fill:#ff3060; cursor:pointer;" onclick="toggleRelayManual()"></circle>
+                <text class="twin-node-label" x="35" y="132" style="font-size:5px">Button</text>
+              </g>
+
+              <!-- 16x2 LCD Display -->
+              <g>
+                <rect class="twin-node-rect active" x="75" y="105" width="50" height="22" rx="2" id="twin-lcd-rect" style="fill:#122008; stroke:#00bb66; stroke-width:0.8;"></rect>
+                <text x="100" y="113" id="twin-lcd-line1" style="font-family:var(--font-mono); font-size:4px; fill:#00FF88; text-anchor:middle;">SOC: 72%</text>
+                <text x="100" y="121" id="twin-lcd-line2" style="font-family:var(--font-mono); font-size:4px; fill:#00FF88; text-anchor:middle;">TEMP: 34C</text>
+              </g>
+
+              <!-- Piezo Buzzer -->
+              <g>
+                <circle class="twin-node-rect active" cx="155" cy="115" r="10" id="twin-buzzer-circle" style="fill:#0b1c28; stroke:var(--border-cyan);"></circle>
+                <circle cx="155" cy="115" r="3" style="fill:#020406;"></circle>
+                <text class="twin-node-label" x="155" y="132" style="font-size:5px">Buzzer</text>
+              </g>
+
+              <!-- Status LEDs -->
+              <g>
+                <!-- RED Led -->
+                <circle cx="205" cy="115" r="3" id="twin-led-red" style="fill:#300a10; stroke:#FF3060; stroke-width:0.5;"></circle>
+                <!-- GREEN Led -->
+                <circle cx="215" cy="115" r="3" id="twin-led-green" style="fill:#053010; stroke:#00FF88; stroke-width:0.5;"></circle>
+                <!-- BLUE Led -->
+                <circle cx="225" cy="115" r="3" id="twin-led-blue" style="fill:#051030; stroke:#0066FF; stroke-width:0.5;"></circle>
+                <text class="twin-node-label" x="215" y="132" style="font-size:5px">Status LEDs</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Fuzzy logic inspectors -->
+        <div class="cyber-card" style="height:100%">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom:12px;">Mamdani FIS Activation inspector</h3>
+          
+          <div class="fuzzy-visual-container">
+            
+            <!-- SoC Activations -->
+            <div class="fuzzy-row">
+              <span class="fuzzy-row-label">SoC Low</span>
+              <div class="fuzzy-bars-group">
+                <div class="fuzzy-bar-container">
+                  <div class="fuzzy-bar-rail">
+                    <div class="fuzzy-bar-fill soc-fill" id="f-soc-low" style="width: 0%"></div>
+                  </div>
+                  <div class="fuzzy-bar-label">
+                    <span>Low [0-55]</span>
+                    <span id="f-soc-low-val">0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="fuzzy-row">
+              <span class="fuzzy-row-label">SoC Med</span>
+              <div class="fuzzy-bars-group">
+                <div class="fuzzy-bar-container">
+                  <div class="fuzzy-bar-rail">
+                    <div class="fuzzy-bar-fill soc-fill" id="f-soc-med" style="width: 80%"></div>
+                  </div>
+                  <div class="fuzzy-bar-label">
+                    <span>Medium [35-75]</span>
+                    <span id="f-soc-med-val">0.80</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fuzzy-row">
+              <span class="fuzzy-row-label">SoC High</span>
+              <div class="fuzzy-bars-group">
+                <div class="fuzzy-bar-container">
+                  <div class="fuzzy-bar-rail">
+                    <div class="fuzzy-bar-fill soc-fill" id="f-soc-high" style="width: 20%"></div>
+                  </div>
+                  <div class="fuzzy-bar-label">
+                    <span>High [60-100]</span>
+                    <span id="f-soc-high-val">0.20</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Temp Activations -->
+            <div class="fuzzy-row" style="border-top: 1px solid rgba(0, 180, 255, 0.08); padding-top: 10px;">
+              <span class="fuzzy-row-label">Temp Cool</span>
+              <div class="fuzzy-bars-group">
+                <div class="fuzzy-bar-container">
+                  <div class="fuzzy-bar-rail">
+                    <div class="fuzzy-bar-fill temp-fill" id="f-temp-cool" style="width: 0%"></div>
+                  </div>
+                  <div class="fuzzy-bar-label">
+                    <span>Cool [0-25]</span>
+                    <span id="f-temp-cool-val">0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fuzzy-row">
+              <span class="fuzzy-row-label">Temp Normal</span>
+              <div class="fuzzy-bars-group">
+                <div class="fuzzy-bar-container">
+                  <div class="fuzzy-bar-rail">
+                    <div class="fuzzy-bar-fill temp-fill" id="f-temp-norm" style="width: 76%"></div>
+                  </div>
+                  <div class="fuzzy-bar-label">
+                    <span>Normal [15-45]</span>
+                    <span id="f-temp-norm-val">0.76</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fuzzy-row">
+              <span class="fuzzy-row-label">Temp Hot</span>
+              <div class="fuzzy-bars-group">
+                <div class="fuzzy-bar-container">
+                  <div class="fuzzy-bar-rail">
+                    <div class="fuzzy-bar-fill temp-fill" id="f-temp-hot" style="width: 0%"></div>
+                  </div>
+                  <div class="fuzzy-bar-label">
+                    <span>Hot [35-100]</span>
+                    <span id="f-temp-hot-val">0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Real-Time Charts Plot -->
+      <div class="cyber-card chart-card">
+        <div class="hud-brackets"></div>
+        <canvas id="telemetry-chart" style="width:100%; height:100%"></canvas>
+      </div>
+
+      <!-- AI Decision Explainer Panel -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">AI Decision Explainer</h3>
+        <div style="font-family:var(--font-body); font-size:14px; line-height:1.6; color:var(--text-white);" id="fuzzy-explainer-txt">
+          Fuzzy Engine Evaluating Inputs: SoC = 72%, Cell Temp = 34°C. Active Rule: SoC is Medium AND Temp is Normal ➔ Current throttled to MEDIUM (0.82A) to protect battery longevity.
+        </div>
+      </div>
+
+      <!-- Charging Session Records & Timeline Playback -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">Charging Session Playback Console</h3>
+        <div class="sessions-card">
+          <table class="dashboard-table" id="sessions-table">
+            <thead>
+              <tr>
+                <th>Session ID</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Start SoC</th>
+                <th>End SoC</th>
+                <th>Energy (Wh)</th>
+                <th>Avg Temp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td># 104</td>
+                <td>14:00:12</td>
+                <td>15:20:44</td>
+                <td>30%</td>
+                <td>95%</td>
+                <td>15.82</td>
+                <td>34.2 °C</td>
+              </tr>
+              <tr>
+                <td># 103</td>
+                <td>10:14:00</td>
+                <td>11:42:12</td>
+                <td>40%</td>
+                <td>96%</td>
+                <td>12.40</td>
+                <td>32.8 °C</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Playback Console UI -->
+        <div class="playback-controls">
+          <div class="playback-btn-group">
+            <button class="playback-btn" onclick="playbackPlay()"><span id="play-btn-lbl">▶</span></button>
+            <button class="playback-btn" onclick="playbackPause()">⏸</button>
+            <button class="playback-btn" onclick="playbackReset()">⏮</button>
+          </div>
+          <div class="playback-timeline">
+            <input type="range" class="playback-slider" id="playback-range" min="0" max="100" value="0" oninput="playbackSeek()">
+          </div>
+          <div class="playback-time-label" id="playback-time-lbl">00:00:00</div>
+        </div>
+      </div>
+
+      <!-- Event Logs Terminal View -->
+      <div class="cyber-card">
+        <div class="hud-brackets"></div>
+        <h3 class="kpi-title" style="margin-bottom:12px;">System Event Timeline</h3>
+        <div class="log-terminal" id="event-log-terminal">
+          <div class="log-line info">[14:00:12] INFO: Charging session #104 started manually. Initial SoC: 30%.</div>
+          <div class="log-line info">[14:00:15] INFO: Mamdani FIS Engine evaluates FAST Charging (1.50A).</div>
+          <div class="log-line warning">[14:15:24] WARNING: Cell Temperature crossed 38°C. Rule firing maps to MEDIUM Mode.</div>
+          <div class="log-line info">[14:15:25] INFO: AI scales current from 1.50A to 0.82A.</div>
+        </div>
+      </div>
+
+      <!-- Live Serial Monitor, Last Raw Packet & Raw Telemetry Inspector -->
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 20px;">
+        <!-- Live Serial Monitor -->
+        <div class="cyber-card">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom:12px;">Live Serial Monitor Console</h3>
+          <div class="log-terminal" id="serial-monitor-terminal" style="height: 180px;">
+            <div class="log-line info">[System Boot] Serial auto-detect listener active. Scan interval: 5000ms.</div>
+          </div>
+        </div>
+
+        <!-- Last Raw Packet -->
+        <div class="cyber-card">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom:12px;">Last Raw Packet (Count: <span id="raw-packet-count" style="color: var(--accent-cyan)">0</span>)</h3>
+          <pre id="last-raw-packet" style="font-family: var(--font-mono); font-size: 10px; color: var(--accent-cyan); background: rgba(0,0,0,0.4); border: 1px solid var(--border-cyan); padding: 10px; border-radius: 8px; height: 180px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">No packet received yet.</pre>
+        </div>
+
+        <!-- Raw Telemetry JSON Inspector -->
+        <div class="cyber-card">
+          <div class="hud-brackets"></div>
+          <h3 class="kpi-title" style="margin-bottom:12px;">Raw JSON Telemetry Inspector</h3>
+          <pre id="raw-json-inspector" style="font-family: var(--font-mono); font-size: 10px; color: var(--accent-green); background: rgba(0,0,0,0.4); border: 1px solid var(--border-cyan); padding: 10px; border-radius: 8px; height: 180px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">{}</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Floating Centers -->
+  <div class="notification-center" id="notification-center"></div>
+
+  <!-- Dangerous command confirmation dialog overlay -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal-content">
+      <div class="modal-title" id="modal-title-element">Critical Operation Check</div>
+      <div class="modal-body" id="modal-body-element">Are you sure you want to execute this safety override override?</div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btn-modal-confirm">CONFIRM EXECUTION</button>
+        <button class="btn-secondary" onclick="closeModal()">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load dependencies and scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
