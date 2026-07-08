@@ -150,7 +150,7 @@ function createTables() {
 
         // Seed events
         db.run(`INSERT INTO events (timestamp, severity, description) VALUES 
-          (?, 'INFO', 'ESP32 system booted successfully. Firmware version v1.0.4-rvce.'),
+          (?, 'INFO', 'STM32 system booted successfully. Firmware version v1.0.4-rvce.'),
           (?, 'INFO', 'WiFi connection established. RSSI: -65dBm.'),
           (?, 'INFO', 'Charging session initiated automatically. Relays engaged.')`, 
           [new Date(now - 3600000).toISOString(), new Date(now - 3500000).toISOString(), new Date(now - 3400000).toISOString()]);
@@ -369,7 +369,7 @@ app.get('/api/export/pdf', (req, res) => {
   doc.pipe(res);
 
   doc.fillColor('#00B4FF').fontSize(22).text('ChargeIQ AI — Charging Analytics Report', { align: 'center' });
-  doc.fontSize(10).fillColor('#4A6A8A').text(`Generated: ${new Date().toLocaleString()} | RVCE EEE SCADA Core`, { align: 'center' });
+  doc.fontSize(10).fillColor('#4A6A8A').text(`Generated: ${new Date().toLocaleString()} | RVCE SCADA Core`, { align: 'center' });
   doc.moveDown(2);
 
   if (useJsonFallback) {
@@ -538,7 +538,7 @@ app.post('/api/serial/connect', (req, res) => {
   if (disconnect) {
     autoDetectPort = false;
     closeSerialPort();
-    broadcastEsp32Status('ESP32_DISCONNECTED', null);
+    broadcastStm32Status('STM32_DISCONNECTED', null);
     console.log("Manual Serial Port Disconnect requested.");
     return res.json({ success: true, message: "Disconnected successfully." });
   }
@@ -561,7 +561,7 @@ app.post('/api/serial/connect', (req, res) => {
 // Get serial connection status
 app.get('/api/serial/status', (req, res) => {
   res.json({
-    status: esp32Status,
+    status: stm32Status,
     port: activeComPort || 'NONE',
     baudRate: activeBaudRate,
     lastPacketTime: lastPacketTime || 'NEVER',
@@ -573,7 +573,7 @@ app.get('/api/serial/status', (req, res) => {
 // Start Express + WebSocket Server
 initSocket(server);
 
-// MOCK ESP32 BROADCAST ENGINE (Runs when no physical serial data is overriding)
+// MOCK STM32 BROADCAST ENGINE (Runs when no physical serial data is overriding)
 let activeSoC = 50;
 let activeTemp = 28;
 let activeRelay = true;
@@ -595,7 +595,7 @@ let activeComPort = null;
 let activeBaudRate = 115200;
 let serialStartTime = null;
 let autoDetectPort = true;
-let esp32Status = 'ESP32_DISCONNECTED';
+let stm32Status = 'STM32_DISCONNECTED';
 let lastPacketTime = null;
 let lastSavedTelemetry = null;
 let lastSavedTime = 0;
@@ -614,7 +614,7 @@ async function scanAndConnectSerial(targetPortName = null, targetBaud = null) {
         return;
       } else {
         console.warn(`Requested port ${targetPortName} not found.`);
-        broadcastEsp32Status('ESP32_DISCONNECTED', null);
+        broadcastStm32Status('STM32_DISCONNECTED', null);
         return;
       }
     }
@@ -628,15 +628,15 @@ async function scanAndConnectSerial(targetPortName = null, targetBaud = null) {
              desc.includes('silicon labs') || 
              desc.includes('usb-to-uart') || 
              desc.includes('wch') ||
-             desc.includes('esp32');
+             desc.includes('stm32');
     });
 
     if (espPort) {
-      console.log(`Auto-detected ESP32 Serial Port: ${espPort.path} (${espPort.friendlyName || espPort.manufacturer || 'Unknown device'})`);
+      console.log(`Auto-detected STM32 Serial Port: ${espPort.path} (${espPort.friendlyName || espPort.manufacturer || 'Unknown device'})`);
       connectToPort(espPort.path, baud);
     } else {
-      if (esp32Status !== 'ESP32_DISCONNECTED') {
-        broadcastEsp32Status('ESP32_DISCONNECTED', null);
+      if (stm32Status !== 'STM32_DISCONNECTED') {
+        broadcastStm32Status('STM32_DISCONNECTED', null);
       }
     }
   } catch (err) {
@@ -653,7 +653,7 @@ function connectToPort(portPath, baud = null) {
 
   closeSerialPort();
   console.log(`Attempting connection to Serial Port: ${portPath} at ${baudRate} baud...`);
-  broadcastEsp32Status('ESP32_CONNECTING', portPath);
+  broadcastStm32Status('STM32_CONNECTING', portPath);
 
   try {
     serialPort = new SerialPort({
@@ -667,37 +667,37 @@ function connectToPort(portPath, baud = null) {
     serialPort.open((err) => {
       if (err) {
         console.error(`Failed to open serial port ${portPath}:`, err.message);
-        broadcastEsp32Status('ESP32_DISCONNECTED', null);
+        broadcastStm32Status('STM32_DISCONNECTED', null);
         return;
       }
 
       activeComPort = portPath;
       activeBaudRate = baudRate;
       serialStartTime = Date.now();
-      broadcastEsp32Status('ESP32_CONNECTED', portPath);
-      console.log(`Successfully connected to ESP32 on port ${portPath}`);
-      logEventToDb("INFO", `ESP32 connected on serial port ${portPath}.`);
+      broadcastStm32Status('STM32_CONNECTED', portPath);
+      console.log(`Successfully connected to STM32 on port ${portPath}`);
+      logEventToDb("INFO", `STM32 connected on serial port ${portPath}.`);
     });
 
     serialParser.on('data', handleSerialData);
 
     serialPort.on('close', () => {
       console.log(`Serial Port ${portPath} closed.`);
-      logEventToDb("WARNING", `ESP32 serial port ${portPath} disconnected.`);
+      logEventToDb("WARNING", `STM32 serial port ${portPath} disconnected.`);
       closeSerialPort();
-      broadcastEsp32Status('ESP32_DISCONNECTED', null);
+      broadcastStm32Status('STM32_DISCONNECTED', null);
     });
 
     serialPort.on('error', (err) => {
       console.error(`Serial Port ${portPath} error:`, err.message);
       closeSerialPort();
-      broadcastEsp32Status('ESP32_DISCONNECTED', null);
+      broadcastStm32Status('STM32_DISCONNECTED', null);
     });
 
   } catch (err) {
     console.error(`Exception initializing serial port connection`, err);
     closeSerialPort();
-    broadcastEsp32Status('ESP32_DISCONNECTED', null);
+    broadcastStm32Status('STM32_DISCONNECTED', null);
   }
 }
 
@@ -714,13 +714,13 @@ function closeSerialPort() {
   activeComPort = null;
 }
 
-function broadcastEsp32Status(status, port) {
-  esp32Status = status;
+function broadcastStm32Status(status, port) {
+  stm32Status = status;
   const { initSocket } = require('./socket');
   const io = initSocket();
   if (io) {
-    io.emit('esp32_status', {
-      status: esp32Status,
+    io.emit('stm32_status', {
+      status: stm32Status,
       port: port || 'NONE',
       lastPacketTime: lastPacketTime || 'NEVER'
     });
@@ -732,7 +732,7 @@ function handleSerialData(line) {
     line = line.trim();
     if (!line) return;
 
-    // Log every raw serial line received from ESP32 to the Node.js console.
+    // Log every raw serial line received from STM32 to the Node.js console.
     console.log(`[RAW SERIAL IN]: ${line}`);
 
     // Clean leading garbage and potential corrupted start of JSON
@@ -851,7 +851,7 @@ function handleSerialData(line) {
         }
       }
 
-      // Handle Full Charge event from ESP32 Mode
+      // Handle Full Charge event from STM32 Mode
       if (parsedTelemetry.mode === "FULL" && parsedTelemetry.relay) {
         logEventToDb("INFO", "Battery Fully Charged. Charging Completed Successfully.");
         if (io) {
@@ -1172,7 +1172,7 @@ app.post('/api/controls', (req, res) => {
         setTimeout(() => {
           if (pendingAck && !resolved) {
             console.warn(`Timeout waiting for ${command}_ACK`);
-            logEventToDb("WARNING", `Timeout waiting for physical ESP32 command ACK: ${command}`);
+            logEventToDb("WARNING", `Timeout waiting for physical STM32 command ACK: ${command}`);
             pendingAck.reject("Timeout waiting for acknowledgment.");
           }
         }, 2000);

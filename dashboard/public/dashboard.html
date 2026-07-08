@@ -612,28 +612,28 @@
         <div class="diag-item" id="diag-database"><span style="color:var(--accent-amber)">○</span> SQLite Database: <span style="color:var(--accent-amber)">PENDING...</span></div>
         <div class="diag-item" id="diag-socket"><span style="color:var(--accent-amber)">○</span> Socket.IO Registry: <span style="color:var(--accent-amber)">PENDING...</span></div>
         <div class="diag-item" id="diag-serial"><span style="color:var(--accent-amber)">○</span> Serial Interface Manager: <span style="color:var(--accent-amber)">PENDING...</span></div>
-        <div class="diag-item" id="diag-esp32"><span style="color:var(--accent-amber)">○</span> ESP32 Connection: <span style="color:var(--accent-amber)">PENDING...</span></div>
+        <div class="diag-item" id="diag-stm32"><span style="color:var(--accent-amber)">○</span> STM32 Connection: <span style="color:var(--accent-amber)">PENDING...</span></div>
         <div class="diag-item" id="diag-stream"><span style="color:var(--accent-amber)">○</span> Telemetry Stream: <span style="color:var(--accent-amber)">PENDING...</span></div>
       </div>
-      <div style="margin-top: 30px; border-top: 1px solid rgba(0, 180, 255, 0.1); padding-top: 16px; text-align: center; font-size: 10px; color: var(--text-muted);">RVCE EEE DEPARTMENTS — PROTOCOL V1.0</div>
+      <div style="margin-top: 30px; border-top: 1px solid rgba(0, 180, 255, 0.1); padding-top: 16px; text-align: center; font-size: 10px; color: var(--text-muted);">RVCE DEPARTMENTS — PROTOCOL V1.0</div>
     </div>
   </div>
 
   <!-- Disconnect Warning Banner -->
-  <div id="esp32-disconnect-banner" style="display: none; background: rgba(255, 48, 96, 0.95); color: white; text-align: center; padding: 12px; font-family: var(--font-display); font-size: 13px; font-weight: bold; z-index: 10005; position: fixed; top: 0; left: 0; width: 100%; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); letter-spacing: 1px;">
-    ⚠️ ESP32 SERIAL CONNECTION LOST. SHOWING LAST KNOWN DATA. SCANNING FOR PORT...
+  <div id="stm32-disconnect-banner" style="display: none; background: rgba(255, 48, 96, 0.95); color: white; text-align: center; padding: 12px; font-family: var(--font-display); font-size: 13px; font-weight: bold; z-index: 10005; position: fixed; top: 0; left: 0; width: 100%; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); letter-spacing: 1px;">
+    ⚠️ STM32 SERIAL CONNECTION LOST. SHOWING LAST KNOWN DATA. SCANNING FOR PORT...
   </div>
 
   <!-- Timeout Warning Banner -->
-  <div id="esp32-timeout-banner" style="display: none; background: rgba(255, 184, 0, 0.95); color: black; text-align: center; padding: 12px; font-family: var(--font-display); font-size: 13px; font-weight: bold; z-index: 10006; position: fixed; top: 0; left: 0; width: 100%; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); letter-spacing: 1px;">
-    ⚠️ ESP32 TIMEOUT! NO TELEMETRY RECEIVED. Last packet received <span id="timeout-seconds-lbl">5.0</span> seconds ago.
+  <div id="stm32-timeout-banner" style="display: none; background: rgba(255, 184, 0, 0.95); color: black; text-align: center; padding: 12px; font-family: var(--font-display); font-size: 13px; font-weight: bold; z-index: 10006; position: fixed; top: 0; left: 0; width: 100%; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); letter-spacing: 1px;">
+    ⚠️ STM32 TIMEOUT! NO TELEMETRY RECEIVED. Last packet received <span id="timeout-seconds-lbl">5.0</span> seconds ago.
   </div>
 
   <!-- Sticky Navbar -->
   <nav class="sticky-nav">
     <div class="nav-left">
       <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer">⚡ <span>ChargeIQ</span> AI</div>
-      <span class="logo-badge">RVCE EEE</span>
+      <span class="logo-badge">RVCE</span>
     </div>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
@@ -656,7 +656,7 @@
   <!-- Horizontal Ticker -->
   <div class="ticker-wrap">
     <div class="ticker">
-      <div class="ticker-item">ESP32 TELEMETRY BROADCAST ACTIVE</div>
+      <div class="ticker-item">STM32 TELEMETRY BROADCAST ACTIVE</div>
       <div class="ticker-item">MAMDANI FUZZY ENGINE RUNNING</div>
       <div class="ticker-item" id="ticker-soc">BATTERY SOC: -- %</div>
       <div class="ticker-item" id="ticker-temp">CELL TEMP: -- °C</div>
@@ -669,8 +669,8 @@
   <div class="health-bar fade-up-element visible">
     <div class="health-group">
       <div class="health-item">
-        <span>ESP32 Serial:</span>
-        <div class="status-dot red" id="health-esp32"></div>
+        <span>STM32 Serial:</span>
+        <div class="status-dot red" id="health-stm32"></div>
       </div>
       <div class="health-item">
         <span>Backend Server:</span>
@@ -782,7 +782,7 @@
           </div>
           
           <div style="border-top: 1px solid rgba(0, 180, 255, 0.08); padding-top: 10px; font-family: var(--font-mono); font-size: 11px; line-height: 1.6; color: var(--text-white);">
-            <div>ESP32: <span id="serial-link-status" style="font-weight:bold; color:var(--accent-red)">DISCONNECTED</span></div>
+            <div>STM32: <span id="serial-link-status" style="font-weight:bold; color:var(--accent-red)">DISCONNECTED</span></div>
             <div>Port: <span id="serial-port-name" style="color:var(--accent-cyan)">AUTO</span></div>
             <div>Baud: <span id="serial-port-baud" style="color:var(--accent-cyan)">115200</span></div>
             <div>Connected for: <span id="serial-duration" style="color:var(--accent-cyan)">00:00:00</span></div>
@@ -815,7 +815,7 @@
           <div>Avg Interval: <span style="color:var(--accent-green)" id="stats-interval">-- ms</span></div>
           <div>Link Reliability: <span style="color:var(--accent-cyan)" id="stats-reliability">100.00%</span></div>
           <div style="border-top: 1px solid rgba(0, 180, 255, 0.08); margin-top: 8px; padding-top: 8px;">
-            <div>System Uptime: <span style="color:var(--accent-cyan)" id="esp32-uptime">0h 14m 22s</span></div>
+            <div>System Uptime: <span style="color:var(--accent-cyan)" id="stm32-uptime">0h 14m 22s</span></div>
             <div>CPU Freq: <span style="color:var(--accent-cyan)">240 MHz</span></div>
             <div>Heap Free: <span style="color:var(--accent-cyan)">184 KB</span></div>
           </div>
@@ -921,7 +921,7 @@
           <div id="battery-status-badge" style="font-family: var(--font-display); font-size: 14px; font-weight: 800; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-cyan); text-transform: uppercase; color: var(--text-muted); background: rgba(255,255,255,0.02)">
             DISCONNECTED
           </div>
-          <div id="battery-status-desc" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Waiting for ESP32 link...</div>
+          <div id="battery-status-desc" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Waiting for STM32 link...</div>
         </div>
 
         <!-- Sensor Grid -->
@@ -1096,10 +1096,10 @@
                 <text class="twin-node-label" x="267" y="90" style="font-size:6px">NTC</text>
               </g>
 
-              <!-- ESP32 Controller Node -->
+              <!-- STM32 Controller Node -->
               <g>
                 <rect class="twin-node-rect active" x="90" y="10" width="120" height="30" rx="4"></rect>
-                <text class="twin-node-label" x="150" y="24" style="fill:var(--accent-cyan)">ESP32 DevKit Core</text>
+                <text class="twin-node-label" x="150" y="24" style="fill:var(--accent-cyan)">STM32 DevKit Core</text>
                 <text class="twin-node-label" x="150" y="34" style="font-size:6px">Processing Loop</text>
               </g>
 

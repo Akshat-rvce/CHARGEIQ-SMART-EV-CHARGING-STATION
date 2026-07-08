@@ -20,7 +20,7 @@ function initPreloader() {
     "Reading Mamdani FIS Membership Configurations...",
     "Compiling 5 Fuzzy Rules... [SUCCESS]",
     "Connecting Express Local WebSocket Server...",
-    "Searching for ESP32 DevKit Core... [STANDBY]",
+    "Searching for STM32 DevKit Core... [STANDBY]",
     "Running in Local Loop Simulation Mode... [ACTIVE]",
     "System Ready. Launching Dashboard Interface..."
   ];

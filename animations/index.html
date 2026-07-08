@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChargeIQ — Cinematic Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Rajdhani', sans-serif;
+            cursor: none;
+        }
+        canvas#main-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Controls */
+        #controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        .ctrl-btn {
+            background: rgba(0, 255, 255, 0.06);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            color: rgba(0, 255, 255, 0.6);
+            padding: 8px 18px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            backdrop-filter: blur(8px);
+            border-radius: 4px;
+        }
+        .ctrl-btn:hover {
+            background: rgba(0, 255, 255, 0.18);
+            color: #0ff;
+            box-shadow: 0 0 25px rgba(0,255,255,0.25);
+            border-color: rgba(0,255,255,0.5);
+        }
+
+        /* Scene dots */
+        #scene-indicator {
+            position: fixed;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .scene-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.12);
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            transition: all 0.5s;
+            cursor: pointer;
+        }
+        .scene-dot.active {
+            background: #0ff;
+            box-shadow: 0 0 10px #0ff, 0 0 22px rgba(0,255,255,0.3);
+            transform: scale(1.5);
+            width: 8px; height: 8px;
+        }
+        .scene-dot:hover {
+            background: rgba(0,255,255,0.5);
+            transform: scale(1.3);
+        }
+
+        /* Custom cursor */
+        #cursor-glow {
+            position: fixed;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,255,255,0.35) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="main-canvas"></canvas>
+    <div id="cursor-glow"></div>
+
+    <div id="scene-indicator">
+        <div class="scene-dot active" onclick="switchScene(0)"></div>
+        <div class="scene-dot" onclick="switchScene(1)"></div>
+        <div class="scene-dot" onclick="switchScene(2)"></div>
+        <div class="scene-dot" onclick="switchScene(3)"></div>
+        <div class="scene-dot" onclick="switchScene(4)"></div>
+        <div class="scene-dot" onclick="switchScene(5)"></div>
+        <div class="scene-dot" onclick="switchScene(6)"></div>
+        <div class="scene-dot" onclick="switchScene(7)"></div>
+    </div>
+
+    <div id="controls">
+        <button class="ctrl-btn" id="btn-prev">◀ PREV</button>
+        <button class="ctrl-btn" id="btn-replay">↻ REPLAY</button>
+        <button class="ctrl-btn" id="btn-next">NEXT ▶</button>
+    </div>
+
+    <!-- Load scripts in order -->
+    <script src="js/particles.js?v=2"></script>
+    <script src="js/drawings.js?v=2"></script>
+    <script src="js/scenes_part1.js?v=2"></script>
+    <script src="js/scenes_part2.js?v=2"></script>
+    <script src="js/scenes_part3.js?v=2"></script>
+    <script src="js/engine.js?v=2"></script>
+</body>
+</html>

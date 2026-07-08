@@ -3,7 +3,7 @@
 let currentMode = "LIVE"; // LIVE or SIMULATION
 let socket = null;
 let chart = null;
-let esp32ConnectionStatus = "ESP32_DISCONNECTED";
+let stm32ConnectionStatus = "STM32_DISCONNECTED";
 
 // SCADA telemetry and connection statistics
 let packetsReceived = 0;
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
 /* 1. WebSocket Node.js Socket.IO Connector */
 function initSocketConnection() {
   updateConnectionStatus("server", "amber");
-  updateConnectionStatus("esp32", "amber");
+  updateConnectionStatus("stm32", "amber");
   updateConnectionStatus("database", "amber");
 
   try {
@@ -117,17 +117,17 @@ function initSocketConnection() {
       fetch('/api/serial/status')
         .then(res => res.json())
         .then(statusData => {
-          esp32ConnectionStatus = statusData.status;
-          const banner = document.getElementById("esp32-disconnect-banner");
-          const esp32Dot = document.getElementById("health-esp32");
+          stm32ConnectionStatus = statusData.status;
+          const banner = document.getElementById("stm32-disconnect-banner");
+          const stm32Dot = document.getElementById("health-stm32");
           const portLbl = document.getElementById("serial-port-lbl");
           const portName = document.getElementById("serial-port-name");
           const healthTxt = document.getElementById("system-health-txt");
           const linkStatus = document.getElementById("serial-link-status");
           
-          if (esp32ConnectionStatus === 'ESP32_CONNECTED') {
+          if (stm32ConnectionStatus === 'STM32_CONNECTED') {
             if (banner) banner.style.display = 'none';
-            if (esp32Dot) esp32Dot.className = "status-dot green";
+            if (stm32Dot) stm32Dot.className = "status-dot green";
             if (portLbl) portLbl.textContent = statusData.port;
             if (portName) portName.textContent = statusData.port;
             if (healthTxt) healthTxt.textContent = "LIVE DATA LINK";
@@ -139,24 +139,24 @@ function initSocketConnection() {
               connectionStartTime = Date.now() - (statusData.uptimeSecs * 1000);
               startDurationTracker();
             }
-          } else if (esp32ConnectionStatus === 'ESP32_CONNECTING') {
+          } else if (stm32ConnectionStatus === 'STM32_CONNECTING') {
             if (banner) banner.style.display = 'none';
-            if (esp32Dot) esp32Dot.className = "status-dot amber";
+            if (stm32Dot) stm32Dot.className = "status-dot amber";
             if (portLbl) portLbl.textContent = statusData.port || 'CONNECTING';
             if (portName) portName.textContent = statusData.port || 'CONNECTING';
-            if (healthTxt) healthTxt.textContent = "CONNECTING ESP32...";
+            if (healthTxt) healthTxt.textContent = "CONNECTING STM32...";
             if (linkStatus) {
               linkStatus.textContent = "CONNECTING";
               linkStatus.style.color = "var(--accent-amber)";
             }
           } else {
             if (banner && currentMode === "LIVE") banner.style.display = 'block';
-            if (esp32Dot) esp32Dot.className = "status-dot red";
+            if (stm32Dot) stm32Dot.className = "status-dot red";
             if (portLbl) portLbl.textContent = 'NONE';
             if (portName) portName.textContent = 'AUTO';
             if (healthTxt) {
               if (currentMode === "LIVE") {
-                healthTxt.textContent = "ESP32 DISCONNECTED";
+                healthTxt.textContent = "STM32 DISCONNECTED";
               } else {
                 healthTxt.textContent = "DEMO MODE ACTIVE";
               }
@@ -190,20 +190,20 @@ function initSocketConnection() {
       showToast("System Connected", "Dashboard successfully linked to live telemetry backend server.");
     });
 
-    socket.on('esp32_status', (statusData) => {
-      console.log("ESP32 status update received:", statusData);
-      esp32ConnectionStatus = statusData.status;
+    socket.on('stm32_status', (statusData) => {
+      console.log("STM32 status update received:", statusData);
+      stm32ConnectionStatus = statusData.status;
       
-      const banner = document.getElementById("esp32-disconnect-banner");
-      const esp32Dot = document.getElementById("health-esp32");
+      const banner = document.getElementById("stm32-disconnect-banner");
+      const stm32Dot = document.getElementById("health-stm32");
       const portLbl = document.getElementById("serial-port-lbl");
       const portName = document.getElementById("serial-port-name");
       const healthTxt = document.getElementById("system-health-txt");
       
       const linkStatus = document.getElementById("serial-link-status");
-      if (esp32ConnectionStatus === 'ESP32_CONNECTED') {
+      if (stm32ConnectionStatus === 'STM32_CONNECTED') {
         if (banner) banner.style.display = 'none';
-        if (esp32Dot) esp32Dot.className = "status-dot green";
+        if (stm32Dot) stm32Dot.className = "status-dot green";
         if (portLbl) portLbl.textContent = statusData.port;
         if (portName) portName.textContent = statusData.port;
         if (healthTxt) healthTxt.textContent = "LIVE DATA LINK";
@@ -215,12 +215,12 @@ function initSocketConnection() {
           connectionStartTime = Date.now();
           startDurationTracker();
         }
-      } else if (esp32ConnectionStatus === 'ESP32_CONNECTING') {
+      } else if (stm32ConnectionStatus === 'STM32_CONNECTING') {
         if (banner) banner.style.display = 'none';
-        if (esp32Dot) esp32Dot.className = "status-dot amber";
+        if (stm32Dot) stm32Dot.className = "status-dot amber";
         if (portLbl) portLbl.textContent = statusData.port || 'CONNECTING';
         if (portName) portName.textContent = statusData.port || 'CONNECTING';
-        if (healthTxt) healthTxt.textContent = "CONNECTING ESP32...";
+        if (healthTxt) healthTxt.textContent = "CONNECTING STM32...";
         if (linkStatus) {
           linkStatus.textContent = "CONNECTING";
           linkStatus.style.color = "var(--accent-amber)";
@@ -228,12 +228,12 @@ function initSocketConnection() {
       } else {
         // Disconnected
         if (banner && currentMode === "LIVE") banner.style.display = 'block';
-        if (esp32Dot) esp32Dot.className = "status-dot red";
+        if (stm32Dot) stm32Dot.className = "status-dot red";
         if (portLbl) portLbl.textContent = 'NONE';
         if (portName) portName.textContent = 'AUTO';
         if (healthTxt) {
           if (currentMode === "LIVE") {
-            healthTxt.textContent = "ESP32 DISCONNECTED";
+            healthTxt.textContent = "STM32 DISCONNECTED";
           } else {
             healthTxt.textContent = "DEMO MODE ACTIVE";
           }
@@ -286,25 +286,25 @@ function initSocketConnection() {
       console.log("Socket.IO 'telemetry' event received:", data);
       if (!data) return;
 
-      // Disable all demo/simulation telemetry whenever a valid ESP32 packet is received
+      // Disable all demo/simulation telemetry whenever a valid STM32 packet is received
       if (data.isSimulated === false) {
         if (currentMode !== "LIVE") {
-          console.log("Valid physical ESP32 packet received. Disabling demo/simulation mode.");
+          console.log("Valid physical STM32 packet received. Disabling demo/simulation mode.");
           setMode("LIVE");
         }
-        if (esp32ConnectionStatus !== 'ESP32_CONNECTED') {
-          console.log("ESP32 serial connection detected via active telemetry flow.");
-          esp32ConnectionStatus = 'ESP32_CONNECTED';
+        if (stm32ConnectionStatus !== 'STM32_CONNECTED') {
+          console.log("STM32 serial connection detected via active telemetry flow.");
+          stm32ConnectionStatus = 'STM32_CONNECTED';
           
-          const banner = document.getElementById("esp32-disconnect-banner");
-          const esp32Dot = document.getElementById("health-esp32");
+          const banner = document.getElementById("stm32-disconnect-banner");
+          const stm32Dot = document.getElementById("health-stm32");
           const portLbl = document.getElementById("serial-port-lbl");
           const portName = document.getElementById("serial-port-name");
           const healthTxt = document.getElementById("system-health-txt");
           const linkStatus = document.getElementById("serial-link-status");
           
           if (banner) banner.style.display = 'none';
-          if (esp32Dot) esp32Dot.className = "status-dot green";
+          if (stm32Dot) stm32Dot.className = "status-dot green";
           if (portLbl) portLbl.textContent = data.port || 'COM5';
           if (portName) portName.textContent = data.port || 'COM5';
           if (healthTxt) healthTxt.textContent = "LIVE DATA LINK";
@@ -345,7 +345,7 @@ function initSocketConnection() {
 
 function handleSocketOffline() {
   updateConnectionStatus("server", "red");
-  updateConnectionStatus("esp32", "amber");
+  updateConnectionStatus("stm32", "amber");
   updateConnectionStatus("database", "amber");
   const pingLatency = document.getElementById("ping-latency");
   if (pingLatency) pingLatency.textContent = "--";
@@ -382,7 +382,7 @@ function updateDashboardUI() {
   const badgeLive = document.getElementById("mode-badge-live");
   const badgeDemo = document.getElementById("mode-badge-demo");
   if (badgeLive && badgeDemo) {
-    if (currentMode === "LIVE" && esp32ConnectionStatus === "ESP32_CONNECTED") {
+    if (currentMode === "LIVE" && stm32ConnectionStatus === "STM32_CONNECTED") {
       badgeLive.style.display = "flex";
       badgeDemo.style.display = "none";
     } else {
@@ -487,10 +487,10 @@ function updateDashboardUI() {
   const batteryDesc = document.getElementById("battery-status-desc");
   if (batteryBadge && batteryDesc) {
     batteryBadge.className = "";
-    if (currentMode === "LIVE" && esp32ConnectionStatus !== 'ESP32_CONNECTED') {
+    if (currentMode === "LIVE" && stm32ConnectionStatus !== 'STM32_CONNECTED') {
       batteryBadge.classList.add("battery-badge-disconnected");
       batteryBadge.textContent = "DISCONNECTED";
-      batteryDesc.textContent = "Waiting for ESP32 serial link...";
+      batteryDesc.textContent = "Waiting for STM32 serial link...";
     } else if (telemetryData.temperature >= 50) {
       batteryBadge.classList.add("battery-badge-overheat");
       batteryBadge.textContent = "OVERHEAT ⚠️";
@@ -527,7 +527,7 @@ function updateDashboardUI() {
     if (el) el.className = `status-dot ${status}`;
   };
 
-  if (currentMode === "LIVE" && esp32ConnectionStatus !== 'ESP32_CONNECTED') {
+  if (currentMode === "LIVE" && stm32ConnectionStatus !== 'STM32_CONNECTED') {
     setDot(sVolt, "red");
     setDot(sCurr, "red");
     setDot(sTemp, "red");
@@ -576,7 +576,7 @@ function updateDashboardUI() {
 
   // Calculate and update health score
   let healthScore = 0;
-  const isEspOnline = (currentMode === "SIMULATION") || (esp32ConnectionStatus === 'ESP32_CONNECTED');
+  const isEspOnline = (currentMode === "SIMULATION") || (stm32ConnectionStatus === 'STM32_CONNECTED');
 
   if (isEspOnline) {
     healthScore += 40;
@@ -629,7 +629,7 @@ function updateDashboardUI() {
   const lcdLine1 = document.getElementById("twin-lcd-line1");
   const lcdLine2 = document.getElementById("twin-lcd-line2");
   if (lcdLine1 && lcdLine2) {
-    if (currentMode === "LIVE" && esp32ConnectionStatus !== 'ESP32_CONNECTED') {
+    if (currentMode === "LIVE" && stm32ConnectionStatus !== 'STM32_CONNECTED') {
       lcdLine1.textContent = "CONN LOST...";
       lcdLine2.textContent = "SCANNING PORT";
     } else if (telemetryData.temperature >= 50) {
@@ -671,7 +671,7 @@ function updateDashboardUI() {
   const ledGreen = document.getElementById("twin-led-green");
   const ledBlue = document.getElementById("twin-led-blue");
   if (ledRed && ledGreen && ledBlue) {
-    if (currentMode === "LIVE" && esp32ConnectionStatus !== 'ESP32_CONNECTED') {
+    if (currentMode === "LIVE" && stm32ConnectionStatus !== 'STM32_CONNECTED') {
       ledRed.style.fill = "#1a0508";
       ledGreen.style.fill = "#051a08";
       ledBlue.style.fill = "#05081a";
@@ -1492,7 +1492,7 @@ function initUptimeCounters() {
     const mins = Math.floor((uptimeSecs % 3600) / 60);
     const secs = uptimeSecs % 60;
     
-    document.getElementById("esp32-uptime").textContent = `${hrs}h ${mins}m ${secs}s`;
+    document.getElementById("stm32-uptime").textContent = `${hrs}h ${mins}m ${secs}s`;
     
     // Update dashboard duration timer
     const sessTime = Date.now() - liveSessionStartTime;
@@ -1544,7 +1544,7 @@ function runStartupDiagnostics() {
     { id: "diag-database", api: "/api/history?limit=1", label: "SQLite Database" },
     { id: "diag-socket", check: () => socket && socket.connected, label: "Socket.IO Registry" },
     { id: "diag-serial", api: "/api/serial/ports", label: "Serial Interface Manager" },
-    { id: "diag-esp32", check: () => (currentMode === "SIMULATION" || esp32ConnectionStatus === "ESP32_CONNECTED"), label: "ESP32 Connection", optional: true },
+    { id: "diag-stm32", check: () => (currentMode === "SIMULATION" || stm32ConnectionStatus === "STM32_CONNECTED"), label: "STM32 Connection", optional: true },
     { id: "diag-stream", check: () => packetsReceived > 0 || currentMode === "SIMULATION", label: "Telemetry Stream", optional: true }
   ];
   
@@ -1679,14 +1679,14 @@ function startWatchdogTimer() {
     if (currentMode === "LIVE") {
       if (lastTelemetryTime) {
         const elapsed = (Date.now() - lastTelemetryTime) / 1000;
-        const timeoutBanner = document.getElementById("esp32-timeout-banner");
+        const timeoutBanner = document.getElementById("stm32-timeout-banner");
         if (elapsed > 5.0) {
           if (timeoutBanner) {
             timeoutBanner.style.display = "block";
             const lbl = document.getElementById("timeout-seconds-lbl");
             if (lbl) lbl.textContent = elapsed.toFixed(1);
           }
-          const healthDot = document.getElementById("health-esp32");
+          const healthDot = document.getElementById("health-stm32");
           if (healthDot) healthDot.className = "status-dot red";
           
           const linkStatus = document.getElementById("serial-link-status");
@@ -1699,7 +1699,7 @@ function startWatchdogTimer() {
         }
       }
     } else {
-      const timeoutBanner = document.getElementById("esp32-timeout-banner");
+      const timeoutBanner = document.getElementById("stm32-timeout-banner");
       if (timeoutBanner) timeoutBanner.style.display = "none";
     }
   }, 250);
@@ -1901,7 +1901,7 @@ function disconnectSerialPort() {
 function startDurationTracker() {
   if (serialDurationTimer) clearInterval(serialDurationTimer);
   serialDurationTimer = setInterval(() => {
-    if (esp32ConnectionStatus === 'ESP32_CONNECTED' && connectionStartTime) {
+    if (stm32ConnectionStatus === 'STM32_CONNECTED' && connectionStartTime) {
       const diff = Date.now() - connectionStartTime;
       const hrs = Math.floor(diff / 3600000);
       const mins = Math.floor((diff % 3600000) / 60000);

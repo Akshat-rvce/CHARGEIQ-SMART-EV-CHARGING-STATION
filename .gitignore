@@ -1,7 +1,14 @@
-node_modules/
+# Dependency folders
+dashboard/node_modules/
+
+# Databases
+dashboard/telemetry.db
+dashboard/telemetry_fallback.json
+dashboard/exports/
 telemetry.db
 telemetry_fallback.json
-exports/
+
+# System and logs
 .DS_Store
 .env
 .gemini/
